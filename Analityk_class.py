@@ -9,7 +9,8 @@ from scipy.cluster.hierarchy import dendrogram, linkage
 
 
 class Analityk(object):
-    #wykres słupkowy z udziałami poszczególnych kodów
+    
+    #wykres słupkowy z udziałami dziesięciu najczęściej występujących kodów
     def draw_plot_01(self, file_name):
         current_path = os.path.dirname(__file__)
         default_path = os.path.abspath(os.path.join(current_path, os.pardir))
@@ -17,25 +18,29 @@ class Analityk(object):
         file_path = os.path.join(folder_path, f"{file_name}.xlsx")
         df = pd.read_excel(file_path).set_index('Przedmioty')
 
-
         plt.figure(figsize=(12, 6))
 
         suma_codes = [df[col].sum() for col in df.columns]
-        variable_names = df.columns
+        słownik = {col: suma for col, suma in zip(df.columns, suma_codes)}
+        sorted_słownik = dict(sorted(słownik.items(), key=lambda item: item[1], reverse=True)[:10])  # Sortowanie i wybór 10 największych wartości
+
+        variable_names = list(sorted_słownik.keys())  # Zmienne z największymi sumami
+        suma_codes = list(sorted_słownik.values())   # Sumy odpowiadające tym zmiennym
 
         bar_plot = plt.bar(variable_names, suma_codes, color="orange")
 
         plt.xticks(rotation=45, ha='right')  
-        plt.xlabel('Zmienne')
+        plt.xlabel('Kody')
         plt.ylabel('Liczebność')
-        plt.title('Liczebność dla poszczególnych kodów')
+        plt.title('Dziesięć najczęściej występujących kodów')
 
         for bar, name in zip(bar_plot, variable_names):
             plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), name, ha='center', va='bottom', fontsize=8)
 
         plt.grid(True)
         st.pyplot(plt)
-    # Rysowanie wykresu kołowego z procentowym udziałem poszczególnych kodów
+
+    # Rysowanie wykresu kołowego z procentowym udziałem dziesięciu najczęściej występujących kodów
     def draw_plot_02(self, file_name):
         current_path = os.path.dirname(__file__)
         default_path = os.path.abspath(os.path.join(current_path, os.pardir))
@@ -44,29 +49,22 @@ class Analityk(object):
         df = pd.read_excel(file_path).set_index('Przedmioty')
 
         suma_codes = [df[col].sum() for col in df.columns]
-        variable_names = df.columns
+        słownik = {col: suma for col, suma in zip(df.columns, suma_codes)}
+        sorted_słownik = dict(sorted(słownik.items(), key=lambda item: item[1], reverse=True)[:10])  # Sortowanie i wybór 10 największych wartości
 
-        total = sum(suma_codes)
-        percentages = [(count / total) * 100 for count in suma_codes]
-        labels = [f'{name}' if percentage > 2 else '' for name, percentage in zip(variable_names, percentages)]
+        variable_names = list(sorted_słownik.keys())
+        suma_codes = list(sorted_słownik.values())
 
-        plt.figure(figsize=(16, 10))  # Rozmiar wykresu
-
-        # Definicja palety kolorów (tab20b)
         palette = plt.cm.get_cmap('tab20b', len(variable_names))
-
-        # Wygenerowanie więcej kolorów z palety interpolując między dostępnymi kolorami
         colors = palette(np.linspace(0, 1, len(variable_names)))
 
-        # Tworzenie wykresu kołowego z wygenerowanymi kolorami
-        patches, _, _ = plt.pie(suma_codes, labels=labels, colors=colors, startangle=90, autopct=lambda pct: f'{pct:.1f}%' if pct > 2 else '', labeldistance=1.05)
-
-        plt.title('Procentowy udział dla poszczególnych zmiennych', fontsize=20)  # Zwiększenie rozmiaru tytułu
-        plt.legend(patches, variable_names, loc='upper right')
-
-        plt.axis('equal')  # Ustawienie równych proporcji, aby wykres był kołem
+        plt.figure(figsize=(8, 8))
+        plt.pie(suma_codes, labels=variable_names, colors = colors, autopct='%1.1f%%', startangle=140)
+        plt.title('Procentowy udział najczęściej występujących kodów')
+        plt.axis('equal')
 
         st.pyplot(plt)
+
     def plot_results(self, model, title, file_name):
         current_path = os.path.dirname(__file__)
         default_path = os.path.abspath(os.path.join(current_path, os.pardir))
@@ -94,6 +92,7 @@ class Analityk(object):
             plt.text(dim_reduced_df[num, 0], dim_reduced_df[num,1], country)
 
         st.pyplot(plt)
+        
     # Rysowanie dendogramu
     def dendogram(self,title, file_name):
         current_path = os.path.dirname(__file__)
