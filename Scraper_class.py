@@ -187,7 +187,7 @@ class Scraper(object):
         file_path = os.path.join(folder_path, selected_field, f"{selected_field}.xlsx")
         wb.save(file_path)
 
-    def get_data(self, sub_sub_url):
+    def get_data(self, sub_sub_url, progress_bar):
         # stare get_subject
         # Pobieranie listy przedmiotów z wybranego kierunku (ze strony z sylabusami)
         the_class = "syl-get-document syl-pointer"
@@ -208,6 +208,7 @@ class Scraper(object):
         subject_divs = bs3.find_all(class_=the_class)
         subject_names = []
         subject_ids = []
+        n = 0
 
         for i, item in enumerate(subject_divs):
             subject_names.append(item.string.strip())
@@ -227,6 +228,9 @@ class Scraper(object):
             effects[self.subject_names[index]] = learning_effects
             contents[self.subject_names[index]] = course_content
             codes[self.subject_names[index]] = codes_and_descriptions
+            if index % 2:    
+                progress_bar.progress(n + 1)
+                n += 1
         return effects, contents, codes
 
     # Opis wybranego kierunku

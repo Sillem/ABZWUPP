@@ -32,7 +32,7 @@ class Analityk(object):
         plt.xticks(rotation=45, ha='right')  
         plt.xlabel('Kody')
         plt.ylabel('Liczebność')
-        plt.title('Dziesięć najczęściej występujących kodów')
+        #plt.title('Dziesięć najczęściej występujących kodów')
 
         for bar, name in zip(bar_plot, variable_names):
             plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), name, ha='center', va='bottom', fontsize=8)
@@ -60,7 +60,7 @@ class Analityk(object):
 
         plt.figure(figsize=(8, 8))
         plt.pie(suma_codes, labels=variable_names, colors = colors, autopct='%1.1f%%', startangle=140)
-        plt.title('Procentowy udział najczęściej występujących kodów')
+        #plt.title('Procentowy udział najczęściej występujących kodów')
         plt.axis('equal')
 
         st.pyplot(plt)

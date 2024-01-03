@@ -14,6 +14,7 @@ class GUI(object):
         self.scraper = Scraper()
         self.analityk = Analityk()
 
+
     # Wybór poziomu studiów (inżynierskie, licencjackie, magisterskie itp.)
     # Funkcja zwraca pola: selected_level oraz url do wybranej podstrony o danych poziomach studiów
     def get_level(self, selected_language, languages, selected_form, forms, levels):
@@ -60,6 +61,7 @@ class GUI(object):
 
         return selected_level, url
 
+
     # Wybór formy studiów (stacjo/niestacjo)
     # Funkcja zwraca pola: selected_form, czyli wybraną formę studiów, url czyli link do podstrony z daną
     # formą studiów oraz levels- zaktualizowaną listę stopni studiów
@@ -94,6 +96,7 @@ class GUI(object):
 
         return selected_form, url, levels
 
+
     # Wybór wydziału
     # Funkcja zwraca pola: selected_faculty, faculties, czyli wszystkie dostępne na danym
     # poziomie i formie kierunki studiów i links, czyli linki do wszystkich kierunków
@@ -118,6 +121,7 @@ class GUI(object):
 
         return selected_faculty, faculties, links
 
+
     # Wybór kierunku studiów
     # Funkcja zwraca pola: selected field, fields, czyli wszystkie kierunki na wydziale oraz sublinks czyli
     # podlinki do tych kierunków
@@ -139,6 +143,7 @@ class GUI(object):
         selected_field = st.selectbox("Wybierz kierunek: ", fields)
 
         return selected_field, fields, sublinks
+
 
     # Wybór języka studiów
     # Funkcja zwraca pola: selected_language, languages czyli listę języków studiów,
@@ -166,6 +171,7 @@ class GUI(object):
 
         return selected_language, languages, forms, url
 
+
     def create_formularz(self):
         url = "https://sylabus.sggw.edu.pl/pl/1/19/3/4/40"
         payload = {}
@@ -178,25 +184,31 @@ class GUI(object):
         st.title(
             "Aplikacja do badania zależności wiedzy i umiejętności pomiędzy przedmiotami"
         )  # Tytuł aplikacji
+
+
         ### Wybór języka studiów ###
         selected_language, languages, forms, url = self.get_language(bs)
         response = requests.request("GET", url, headers=headers, data=payload)
         bs = BeautifulSoup(response.content, "html.parser")
+
         ### Wybór formy studiów (stacjonarne/niestacjonarne) ###
         selected_form, url, levels = self.get_form(
             bs, selected_language, languages, forms
         )
         response = requests.request("GET", url, headers=headers, data=payload)
         bs = BeautifulSoup(response.content, "html.parser")
+
         ### Wybór stopnia studiów (licencjat,inżynier itp.) ###
         selected_level, url = self.get_level(
             selected_language, languages, selected_form, forms, levels
         )
+
         ### Wybór wydziału ###
         selected_faculty, faculties, links = self.get_faculties(url)
         for i in range(len(faculties)):
             if selected_faculty == faculties[i]:
                 chosen_one = i
+
         ### Wybór kierunku studiów ###
         sub_url = links[chosen_one]
         selected_field, fields, sublinks = self.get_field(sub_url)
@@ -206,13 +218,14 @@ class GUI(object):
                 chosen_one2 = i
         sub_sub_url = sublinks[chosen_one2]
         print(sub_sub_url)
+
         ### Tworzenie przycisku zatwierdzającego wybory ###
         if st.button("Zatwierdź wybory"):
             start = time()
-            # progress_bar = st.progress(0)
-            # status_text = st.empty()
+            progress_bar = st.progress(0)
+            status_text = st.empty()
 
-            effects, contents, codes = self.scraper.get_data(sub_sub_url)
+            effects, contents, codes = self.scraper.get_data(sub_sub_url, progress_bar)
             print(f"Pobieranie danych zajęło {(time() - start):.{2}f} sekund")
             # Pobieranie słowników z efektami kształcenia, treściami programowymi i kodów z wybranego kierunku
             start = time()
@@ -227,12 +240,15 @@ class GUI(object):
             folder_path = os.path.join(
                 default_path, field_names_folder, f"{selected_field}"
             )
+            progress_bar.progress(80)
             start = time()
+
             ### ZAPISYWANIE EFEKTÓW UCZENIA SIE ###
             with open(
                 os.path.join(folder_path, "efekty_uczenia.json"), "w", encoding="utf-8"
             ) as json_file:
                 json.dump(effects, json_file, ensure_ascii=False)
+
             ### ZAPISYWANIE TRESCI PROGRAMOWYCH ###
             with open(
                 os.path.join(folder_path, "tresci_programowe.json"),
@@ -240,6 +256,7 @@ class GUI(object):
                 encoding="utf-8",
             ) as json_file:
                 json.dump(contents, json_file, ensure_ascii=False)
+
             ### ZAPISYWANIE KODÓW ###
             with open(
                 os.path.join(folder_path, "kody2.json"), "w", encoding="utf-8"
@@ -248,17 +265,26 @@ class GUI(object):
             print(
                 f"Zapisywanie treści programowych zajęło {(time() - start):.{2}f} sekund."
             )
+            progress_bar.progress(90)
             ### Opis kierunku ###
             start = time()
+            st.subheader("Opis wybranego kierunku")
             self.scraper.get_description(selected_field, sub_sub_url)
-            st.text("Wykres")
+            st.markdown("# Wyniki analizy")
+            st.markdown("## Wykres słupkowy")
+            st.text("Dziesięć najczęściej występujących kodów na wybranym kierunku")
             self.analityk.draw_plot_01(selected_field)
+            st.markdown("## Wykres kołowy ")
+            st.text("Procentowy udział dzięcięciu najczęściej występujących kodów")
             self.analityk.draw_plot_02(selected_field)
+            st.markdown("## Klasteryzacja")
             self.analityk.plot_results(
                 cl.KMeans(n_clusters=3), "KMeans", selected_field
             )  # próba narysowania wykresu z podziałem na klastry
+            st.markdown("## Dendogram")
             self.analityk.dendogram("ward", selected_field)  # dendogram metodą Warda
             print(f"Wyświetlanie danych zajęło {(time() - start):.{2}f} sekund")
+            progress_bar.progress(100)
 
 
 def main():
