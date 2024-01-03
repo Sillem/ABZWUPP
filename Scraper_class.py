@@ -5,6 +5,7 @@ import os
 import openpyxl
 from time import sleep
 
+
 def remove_char(input_string, char_to_remove):
     result = ""
     for char in input_string:
@@ -15,9 +16,10 @@ def remove_char(input_string, char_to_remove):
 
 class Scraper(object):
     def __init__(self):
-        self.subject_names =[]
-        self.subject_ids =[]
-    def create_folder(self,folder_name, path=None):
+        self.subject_names = []
+        self.subject_ids = []
+
+    def create_folder(self, folder_name, path=None):
         try:
             if path is None:
                 path = os.getcwd()  # Domyślna ścieżka to aktualny katalog roboczy
@@ -26,18 +28,23 @@ class Scraper(object):
 
             if not os.path.exists(new_folder_path):
                 os.makedirs(new_folder_path)
-                print(f"Folder '{folder_name}' created successfully at: {new_folder_path}")
+                print(
+                    f"Folder '{folder_name}' created successfully at: {new_folder_path}"
+                )
             else:
                 print(f"Folder '{folder_name}' already exists at: {new_folder_path}")
         except Exception as e:
             print(f"An error occurred: {e}")
+
     def create_data(self):
         field_list_codes_and_des = []
         field_codes = []
         field_codes_dict = {}
         for i in range(len(self.subject_names)):
             chosen_id = self.subject_ids[i]
-            doc_url = "https://sylabus.sggw.edu.pl/pl/document/" + chosen_id + ".jsonHtml"
+            doc_url = (
+                "https://sylabus.sggw.edu.pl/pl/document/" + chosen_id + ".jsonHtml"
+            )
 
             payload = {}
             headers = {
@@ -45,7 +52,9 @@ class Scraper(object):
             }
             for trail in range(3):
                 try:
-                    response = requests.request("GET", doc_url, headers=headers, data=payload)
+                    response = requests.request(
+                        "GET", doc_url, headers=headers, data=payload
+                    )
                     continue
                 except requests.exceptions.ConnectTimeout:
                     sleep(1)
@@ -67,28 +76,31 @@ class Scraper(object):
                     subject_codes.append(code)
                     codes_and_descriptions2.append((code, code_description))
                     field_codes.append(code)
-            
+
             subject_codes = list(filter(None, subject_codes))
             field_codes_dict[self.subject_names[i]] = subject_codes
-        
+
         field_list_codes_and_des = list(set(codes_and_descriptions2))
         field_codes = list(filter(None, list(set(field_codes))))
-            
+
         return field_codes_dict, field_codes
+
     def get_effects_content_codes(self, chosen_id):
         # pobieranie efektów kształcenia i treści programowych ze strony z sylabusami
-        #get effects and content
+        # get effects and content
         payload = {}
         headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
         }
         doc_url = "https://sylabus.sggw.edu.pl/pl/document/" + chosen_id + ".jsonHtml"
         for trail in range(3):
-                try:
-                    response = requests.request("GET", doc_url, headers=headers, data=payload)
-                    continue
-                except requests.exceptions.ConnectTimeout:
-                    sleep(0.1)
+            try:
+                response = requests.request(
+                    "GET", doc_url, headers=headers, data=payload
+                )
+                continue
+            except requests.exceptions.ConnectTimeout:
+                sleep(0.1)
         html = response.json()["html"]
         bs4 = BeautifulSoup(html, "html.parser")
         course_content = ""
@@ -100,23 +112,33 @@ class Scraper(object):
                 efekty_tag = h1.find_next()
 
                 for i, item in enumerate(efekty_tag.find_all("td", class_="code")):
-                    if "row_code" not in item["class"] and "row_header" not in item["class"]:
+                    if (
+                        "row_code" not in item["class"]
+                        and "row_header" not in item["class"]
+                    ):
                         if item.find("span") is None:
-                            learning_effects += item.find_next().get_text().strip() + " "
+                            learning_effects += (
+                                item.find_next().get_text().strip() + " "
+                            )
 
             if h1.get_text().strip() == "Treści programowe":
                 tresc_tag = h1.find_next()
 
                 for i, item in enumerate(tresc_tag.find_all("td", class_="code")):
-                    if "row_code" not in item["class"] and "row_header" not in item["class"]:
+                    if (
+                        "row_code" not in item["class"]
+                        and "row_header" not in item["class"]
+                    ):
                         the_text = item.find_next().get_text().strip()
                         course_content += the_text + " "
-        #get codes
-        # Pobieranie kodów kierunku ze strony z sylabusami                 
+        # get codes
+        # Pobieranie kodów kierunku ze strony z sylabusami
         doc_url = "https://sylabus.sggw.edu.pl/pl/document/" + chosen_id + ".jsonHtml"
         for trail in range(3):
             try:
-                response = requests.request("GET", doc_url, headers=headers, data=payload)
+                response = requests.request(
+                    "GET", doc_url, headers=headers, data=payload
+                )
                 continue
             except requests.exceptions.ConnectTimeout:
                 sleep(0.1)
@@ -133,6 +155,7 @@ class Scraper(object):
                 print("No popup title found")
 
         return codes_and_descriptions, learning_effects, course_content
+
     def save_data(self, selected_field):
         field_codes_dict, field_codes = self.create_data()
         field_codes = list(filter(lambda x: len(x) != 2, field_codes))
@@ -163,23 +186,26 @@ class Scraper(object):
         self.create_folder(f"{selected_field}", folder_path)
         file_path = os.path.join(folder_path, selected_field, f"{selected_field}.xlsx")
         wb.save(file_path)
-    def get_data(self,sub_sub_url):
+
+    def get_data(self, sub_sub_url):
         # stare get_subject
         # Pobieranie listy przedmiotów z wybranego kierunku (ze strony z sylabusami)
         the_class = "syl-get-document syl-pointer"
         payload = {}
         headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
         }
         for trail in range(3):
             try:
-                response = requests.request("GET", sub_sub_url, headers=headers, data=payload)
+                response = requests.request(
+                    "GET", sub_sub_url, headers=headers, data=payload
+                )
                 continue
             except requests.exceptions.ConnectTimeout:
                 sleep(1)
         bs3 = BeautifulSoup(response.content, "html.parser")
 
-        subject_divs = bs3.find_all(class_ = the_class)
+        subject_divs = bs3.find_all(class_=the_class)
         subject_names = []
         subject_ids = []
 
@@ -193,14 +219,18 @@ class Scraper(object):
         contents = {}
         codes = {}
         for index, i in enumerate(self.subject_ids):
-            learning_effects, course_content = self.get_effects_content_codes(i)[1], self.get_effects_content_codes(i)[2]
+            learning_effects, course_content = (
+                self.get_effects_content_codes(i)[1],
+                self.get_effects_content_codes(i)[2],
+            )
             codes_and_descriptions = self.get_effects_content_codes(i)[0]
             effects[self.subject_names[index]] = learning_effects
-            contents[self.subject_names[index]] = course_content 
+            contents[self.subject_names[index]] = course_content
             codes[self.subject_names[index]] = codes_and_descriptions
         return effects, contents, codes
+
     # Opis wybranego kierunku
-    def get_description(self,selected_field, sub_sub_url):
+    def get_description(self, selected_field, sub_sub_url):
         st.write(f"Wybrany kierunek: {selected_field}")
         the_class = "syl-grid-tab-content tab-pane fade active show"
         payload = {}
@@ -209,12 +239,16 @@ class Scraper(object):
         }
         for trail in range(3):
             try:
-                response = requests.request("GET", sub_sub_url, headers = headers, data = payload)
+                response = requests.request(
+                    "GET", sub_sub_url, headers=headers, data=payload
+                )
                 continue
             except requests.exceptions.ConnectTimeout:
                 sleep(0.1)
         bs3 = BeautifulSoup(response.content, "html.parser")
-        paragraphs = bs3.find('div', {'id': 'syl-grid-period-info'}).find_all('p')
+        paragraphs = bs3.find("div", {"id": "syl-grid-period-info"}).find_all("p")
 
         for paragraph in paragraphs:
-            st.write(paragraph.get_text(strip=True))
+            paragraph_text = paragraph.get_text(strip=True).replace(">", "")
+            if paragraph_text != "" and paragraph_text != "Program studiów":
+                st.write(paragraph_text)
