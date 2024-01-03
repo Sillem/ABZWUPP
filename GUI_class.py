@@ -6,7 +6,7 @@ from Analityk_class import Analityk
 import os
 import json
 import sklearn.cluster as cl
-
+from time import time
 class GUI(object):
     def __init__(self):
         self.scraper = Scraper()
@@ -62,16 +62,16 @@ class GUI(object):
         if selected_language == languages[0]:
             if selected_form == forms[0]:
                 url = "https://sylabus.sggw.edu.pl/pl/1/19/3/4/40"
-                links_level = bs.find_all('li', text=lambda text: text and ('stopnia' in text or 'magister' in text))
+                links_level = bs.find_all('li', string=lambda text: text and ('stopnia' in text or 'magister' in text))
                 levels = [level.get_text(strip = True) for level in links_level]
             else:
                 url = "https://sylabus.sggw.edu.pl/pl/1/19/4/4/40"
-                links_level = bs.find_all('li', text=lambda text: text and ('stopnia' in text or 'magister' in text))
+                links_level = bs.find_all('li', string=lambda text: text and ('stopnia' in text or 'magister' in text))
                 levels = [level.get_text(strip = True) for level in links_level]
                 levels.remove("jednolite studia magisterskie")
         else:
             url = "https://sylabus.sggw.edu.pl/pl/1/19/3/4/46"
-            links_level = bs.find_all('li', text=lambda text: text and ('stopnia' in text or 'magister' in text))
+            links_level = bs.find_all('li', string=lambda text: text and ('stopnia' in text or 'magister' in text))
             levels = [level.get_text(strip = True) for level in links_level]
 
         return selected_form, url, levels
@@ -123,17 +123,17 @@ class GUI(object):
     # Funkcja zwraca pola: selected_language, languages czyli listę języków studiów,
     # forms czyli listę form studiów oraz url czyli link do zakładki ze studiami w danym języku
     def get_language(self, bs):
-        links_languages = bs.find_all('li', text = lambda text: text and 'prowadzone' in text)
+        links_languages = bs.find_all('li', string= lambda text: text and 'prowadzone' in text)
         languages = [link.get_text(strip = True) for link in links_languages]
         selected_language = st.selectbox("Wybierz język studiów: ", languages)
 
         if selected_language == languages[0]:
             url = "https://sylabus.sggw.edu.pl/pl/1/19/3/4/40"
-            links_form = bs.find_all('li', text = lambda text: text and 'stacjonarne' in text)
+            links_form = bs.find_all('li', string= lambda text: text and 'stacjonarne' in text)
             forms = [form.get_text(strip = True) for form in links_form]
         else:
             url = "https://sylabus.sggw.edu.pl/pl/1/19/3/4/46"
-            links_form = bs.find_all('li', text = lambda text: text and 'stacjonarne' in text)
+            links_form = bs.find_all('li', string= lambda text: text and 'stacjonarne' in text)
             forms = [form.get_text(strip = True) for form in links_form]
             forms.remove("studia niestacjonarne")
 
@@ -173,12 +173,18 @@ class GUI(object):
         sub_sub_url = sublinks[chosen_one2]
         ### Tworzenie przycisku zatwierdzającego wybory ###
         if st.button('Zatwierdź wybory'):
+            start = time()
             effects, contents, codes = self.scraper.get_data(sub_sub_url) 
+            print(f"Pobieranie danych zajęło {start - time()} sekund")
             # Pobieranie słowników z efektami kształcenia, treściami programowymi i kodów z wybranego kierunku
+            start = time()
             self.scraper.save_data(selected_field) # Tworzenie excela z przedmiotami wybranego kierunku z przyporządkowanymi liczbami poszczególnych kodów
+            print(f"Tworzenie excela zajęło {start - time()} sekund")
             default_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
             field_names_folder = "Selected_fields_of_study"
             folder_path = os.path.join(default_path, field_names_folder, f"{selected_field}")
+            print(f"Zapisywanie efektów uczenia zajęło:")
+            start = time()
             ### ZAPISYWANIE EFEKTÓW UCZENIA SIE ###
             with open(
                 os.path.join(folder_path, "efekty_uczenia.json"), "w", encoding="utf-8"
@@ -194,14 +200,16 @@ class GUI(object):
                 os.path.join(folder_path, "kody2.json"), "w", encoding="utf-8"
             ) as json_file:
                 json.dump(codes, json_file, ensure_ascii=False)
+            print(f"Zapisywanie treści programowych zajęło {start-time()} sekund.")
             ### Opis kierunku ###
+            start = time()
             self.scraper.get_description(selected_field, sub_sub_url)  
             st.text("Wykres")
             self.analityk.draw_plot_01(selected_field)
             self.analityk.draw_plot_02(selected_field)
             self.analityk.plot_results(cl.KMeans(n_clusters=3), "KMeans", selected_field) # próba narysowania wykresu z podziałem na klastry
             self.analityk.dendogram("ward", selected_field) # dendogram metodą Warda
-
+            print(f"Wyświetlanie danych zajęło {time() - start}")
 def main():
     g = GUI()
     g.create_formularz()

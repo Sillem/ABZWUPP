@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import streamlit as st
 import os
 import openpyxl
+from time import sleep
 
 def remove_char(input_string, char_to_remove):
     result = ""
@@ -42,8 +43,12 @@ class Scraper(object):
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
             }
-
-            response = requests.request("GET", doc_url, headers=headers, data=payload)
+            for trail in range(3):
+                try:
+                    response = requests.request("GET", doc_url, headers=headers, data=payload)
+                    continue
+                except requests.exceptions.ConnectTimeout:
+                    sleep(1)
             html = response.json()["html"]
             bs4 = BeautifulSoup(html, "html.parser")
 
@@ -78,9 +83,13 @@ class Scraper(object):
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
         }
         doc_url = "https://sylabus.sggw.edu.pl/pl/document/" + chosen_id + ".jsonHtml"
-        response = requests.request("GET", doc_url, headers=headers, data=payload)
+        for trail in range(3):
+                try:
+                    response = requests.request("GET", doc_url, headers=headers, data=payload)
+                    continue
+                except requests.exceptions.ConnectTimeout:
+                    sleep(0.1)
         html = response.json()["html"]
-
         bs4 = BeautifulSoup(html, "html.parser")
         course_content = ""
         learning_effects = ""
@@ -105,7 +114,12 @@ class Scraper(object):
         #get codes
         # Pobieranie kodów kierunku ze strony z sylabusami                 
         doc_url = "https://sylabus.sggw.edu.pl/pl/document/" + chosen_id + ".jsonHtml"
-        response = requests.request("GET", doc_url, headers=headers, data=payload)
+        for trail in range(3):
+            try:
+                response = requests.request("GET", doc_url, headers=headers, data=payload)
+                continue
+            except requests.exceptions.ConnectTimeout:
+                sleep(0.1)
         html = response.json()["html"]
 
         bs = BeautifulSoup(html, "html.parser")
@@ -157,7 +171,12 @@ class Scraper(object):
         headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
         }
-        response = requests.request("GET", sub_sub_url, headers=headers, data=payload)
+        for trail in range(3):
+            try:
+                response = requests.request("GET", sub_sub_url, headers=headers, data=payload)
+                continue
+            except requests.exceptions.ConnectTimeout:
+                sleep(1)
         bs3 = BeautifulSoup(response.content, "html.parser")
 
         subject_divs = bs3.find_all(class_ = the_class)
@@ -188,8 +207,12 @@ class Scraper(object):
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
         }
-
-        response = requests.request("GET", sub_sub_url, headers = headers, data = payload)
+        for trail in range(3):
+            try:
+                response = requests.request("GET", sub_sub_url, headers = headers, data = payload)
+                continue
+            except requests.exceptions.ConnectTimeout:
+                sleep(0.1)
         bs3 = BeautifulSoup(response.content, "html.parser")
         paragraphs = bs3.find('div', {'id': 'syl-grid-period-info'}).find_all('p')
 
