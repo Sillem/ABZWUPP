@@ -209,8 +209,8 @@ class GUI(object):
         ### Tworzenie przycisku zatwierdzającego wybory ###
         if st.button("Zatwierdź wybory"):
             start = time()
-            progress_bar = st.progress(0)
-            status_text = st.empty()
+            # progress_bar = st.progress(0)
+            # status_text = st.empty()
 
             effects, contents, codes = self.scraper.get_data(sub_sub_url)
             print(f"Pobieranie danych zajęło {(time() - start):.{2}f} sekund")
