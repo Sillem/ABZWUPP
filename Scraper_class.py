@@ -132,7 +132,10 @@ class Scraper(object):
                 )
                 print("Sending request #", i, " to: ", doc_url)
                 break
-            except requests.exceptions.ConnectTimeout:
+            except (
+                requests.exceptions.ConnectTimeout,
+                requests.exceptions.ConnectionError,
+            ) as e:
                 print("Timeout. Retrying...")
                 sleep(0.1)
         html = response.json()["html"]
@@ -231,7 +234,10 @@ class Scraper(object):
                 )
                 print("Sending request #", i, " to: ", sub_sub_url)
                 break
-            except requests.exceptions.ConnectTimeout:
+            except (
+                requests.exceptions.ConnectTimeout,
+                requests.exceptions.ConnectionError,
+            ) as e:
                 print("Timeout. Retrying...")
                 sleep(1)
         bs3 = BeautifulSoup(response.content, "html.parser")
@@ -280,7 +286,10 @@ class Scraper(object):
                 )
                 print("Sending request #", i, " to: ", sub_sub_url)
                 break
-            except requests.exceptions.ConnectTimeout:
+            except (
+                requests.exceptions.ConnectTimeout,
+                requests.exceptions.ConnectionError,
+            ) as e:
                 print("Timeout. Retrying...")
                 sleep(0.1)
         bs3 = BeautifulSoup(response.content, "html.parser")
