@@ -11,13 +11,28 @@ from time import time
 
 class GUI(object):
     def __init__(self):
+        """
+        konstruktor tworzący obiekty klas `Scraper` i `Analityk`
+        """
         self.scraper = Scraper()
         self.analityk = Analityk()
 
-
-    # Wybór poziomu studiów (inżynierskie, licencjackie, magisterskie itp.)
-    # Funkcja zwraca pola: selected_level oraz url do wybranej podstrony o danych poziomach studiów
     def get_level(self, selected_language, languages, selected_form, forms, levels):
+        """
+
+        Ta funkcja wybiera poziom studiow i zwraca wybrany poziom oraz URL do szczegolowych danych. 
+
+        Args:
+            selected_language (str): string z nazwa wybranego jezyka
+            languages (list): lista z dostepnymi jezykami do wyboru
+            selected_form (str): string z nazwa wybranej formy studiow
+            forms (list): lista z dostepnymi formami studiow do wyboru
+            levels (list): lista z dostepnymi poziomami studiow do wyboru
+
+        Returns:
+            str selected_level: string z wybranym poziomem studiow
+            str url: str z linkiem do podstrony z kierunkami studiow na danym poziomie 
+        """
         selected_level = st.selectbox("Wybierz stopień studiów: ", levels)
 
         if selected_language == languages[0]:
@@ -61,11 +76,22 @@ class GUI(object):
 
         return selected_level, url
 
-
-    # Wybór formy studiów (stacjo/niestacjo)
-    # Funkcja zwraca pola: selected_form, czyli wybraną formę studiów, url czyli link do podstrony z daną
-    # formą studiów oraz levels- zaktualizowaną listę stopni studiów
     def get_form(self, bs, selected_language, languages, forms):
+        """
+        Wybiera formę studiów (stacjonarne/niestacjonarne) i zwraca wybraną formę,
+          URL i listę dostępnych poziomów studiów.
+
+        Args:
+            bs (class 'bs4.BeautifulSoup'): obiekt klasy BeautifulSoup do tworzenia zapytan
+            selected_language (str): str z nazwa wybranego jezyka studiow
+            languages (list): lista z dostepnymi jezykami do wyboru
+            forms (list): lista z dostepnymi formami studiow do wyboru
+
+        Returns:
+            str selected_form: string z wybrana forma studiow
+            str url: string z linkiem do podstrony z kierunkami studiow na danej formie
+            list levels: lista z dostepnymi poziomami studiow do wyboru
+        """
         selected_form = st.selectbox("Wybierz formę studiów: ", forms)
 
         if selected_language == languages[0]:
@@ -96,11 +122,19 @@ class GUI(object):
 
         return selected_form, url, levels
 
-
-    # Wybór wydziału
-    # Funkcja zwraca pola: selected_faculty, faculties, czyli wszystkie dostępne na danym
-    # poziomie i formie kierunki studiów i links, czyli linki do wszystkich kierunków
     def get_faculties(self, url):
+        """
+        Ta funkcja wybiera wydział i zwraca wybrany wydział, listę dostępnych wydziałów i linki do nich.
+
+        Args:
+            url (str): string z linkiem do podstrony z wydzialami na wybranym wczesniej poziomie, formie i 
+            jezyku
+
+        Returns:
+            str selected_faculty: string z nazwa wybranego wydzialu
+            list faculties: lista z dostepnymi do wyboru kierunkami studiow
+            lista links: lista z linkami do faculties 
+        """
         payload = {}
         domain_url = "https://sylabus.sggw.edu.pl"
         headers = {
@@ -121,11 +155,19 @@ class GUI(object):
 
         return selected_faculty, faculties, links
 
-
-    # Wybór kierunku studiów
-    # Funkcja zwraca pola: selected field, fields, czyli wszystkie kierunki na wydziale oraz sublinks czyli
-    # podlinki do tych kierunków
     def get_field(self, sub_url):
+        """
+        Ta funkcja wybiera kierunek studiow i zwraca pola: selected field, fields, 
+        czyli wszystkie kierunki na wydziale oraz sublinks czyli
+         podlinki do tych kierunków
+        Args:
+            sub_url (str): string z linkiem do wybranego wydzialu
+
+        Returns:
+            str selected_filed: string z wybranym kierunkiem studiow
+            list fields: lista z dostepnymi do wyboru kierunkami studiow
+            list sublinks: lista z linkami do przedmiotow na danym kierunku
+        """    
         payload = {}
         domain_url = "https://sylabus.sggw.edu.pl"
         headers = {
@@ -141,14 +183,24 @@ class GUI(object):
             fields.append(item.get_text().strip())
             sublinks.append(domain_url + item.get("href"))
         selected_field = st.selectbox("Wybierz kierunek: ", fields)
+        print("selected field" + str(type(selected_field)))  
 
         return selected_field, fields, sublinks
 
-
-    # Wybór języka studiów
-    # Funkcja zwraca pola: selected_language, languages czyli listę języków studiów,
-    # forms czyli listę form studiów oraz url czyli link do zakładki ze studiami w danym języku
     def get_language(self, bs):
+        """
+        Ta funkcja wybiera język studiów i zwraca wybrany język, listę dostępnych języków,
+         dostępne formy studiów i URL strony.
+
+        Args:
+            bs (class 'bs4.BeautifulSoup'): obiekt klasy BeautifulSoup do tworzenia zapytan
+
+        Returns:
+            str selected_language: string z wybranym jezykiem studiow
+            list languages: lista z dostepnymi do wyboru jezykami studiow
+            list forms: lista z dostepnymi do wyboru formami studiow
+            str url: string z linkiem do podstrony z kierunkami studiow w danym jezyku
+        """
         links_languages = bs.find_all(
             "li", string=lambda text: text and "prowadzone" in text
         )
@@ -173,6 +225,11 @@ class GUI(object):
 
 
     def create_formularz(self):
+        """
+        Ta funkcja odpowaida za caly interfejs aplikacji webowej tworzonej za pomoca modulu streamlit - 
+        wyswietlanie pol wyboru, wykresow i innych komunkatow. 
+
+        """
         url = "https://sylabus.sggw.edu.pl/pl/1/19/3/4/40"
         payload = {}
         domain_url = "https://sylabus.sggw.edu.pl"
@@ -181,6 +238,7 @@ class GUI(object):
         }
         response = requests.request("GET", url, headers=headers, data=payload)
         bs = BeautifulSoup(response.content, "html.parser")
+
         st.title(
             "Aplikacja do badania zależności wiedzy i umiejętności pomiędzy przedmiotami"
         )  # Tytuł aplikacji
@@ -188,8 +246,11 @@ class GUI(object):
 
         ### Wybór języka studiów ###
         selected_language, languages, forms, url = self.get_language(bs)
+        print("selected language" + str(type(selected_language)) + " langueages" + str(type(languages)))
+        print(languages)
         response = requests.request("GET", url, headers=headers, data=payload)
         bs = BeautifulSoup(response.content, "html.parser")
+        print("bs "+ str(type(bs)))
 
         ### Wybór formy studiów (stacjonarne/niestacjonarne) ###
         selected_form, url, levels = self.get_form(
@@ -197,12 +258,14 @@ class GUI(object):
         )
         response = requests.request("GET", url, headers=headers, data=payload)
         bs = BeautifulSoup(response.content, "html.parser")
+        print("levels" + str(type(levels)))
 
         ### Wybór stopnia studiów (licencjat,inżynier itp.) ###
         selected_level, url = self.get_level(
             selected_language, languages, selected_form, forms, levels
         )
-
+        print(type(url))
+        print(url)
         ### Wybór wydziału ###
         selected_faculty, faculties, links = self.get_faculties(url)
         for i in range(len(faculties)):
@@ -212,6 +275,8 @@ class GUI(object):
         ### Wybór kierunku studiów ###
         sub_url = links[chosen_one]
         selected_field, fields, sublinks = self.get_field(sub_url)
+
+        print("sub-rul" + str(type(sub_url)))
 
         for i in range(len(fields)):
             if selected_field == fields[i]:
@@ -278,11 +343,12 @@ class GUI(object):
             st.text("Procentowy udział dzięcięciu najczęściej występujących kodów")
             self.analityk.draw_plot_02(selected_field)
             st.markdown("## Klasteryzacja")
-            self.analityk.plot_results(
-                cl.KMeans(n_clusters=3), "KMeans", selected_field
+            self.analityk.plot_results(selected_field,
+                cl.KMeans(n_clusters=3), "KMeans"
             )  # próba narysowania wykresu z podziałem na klastry
+            print("model " + str(type(cl.KMeans(n_clusters=3))))
             st.markdown("## Dendogram")
-            self.analityk.dendogram("ward", selected_field)  # dendogram metodą Warda
+            self.analityk.dendogram(selected_field)  # dendogram metodą Warda
             print(f"Wyświetlanie danych zajęło {(time() - start):.{2}f} sekund")
             progress_bar.progress(100)
 

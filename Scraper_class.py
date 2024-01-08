@@ -130,7 +130,6 @@ class Scraper(object):
                 response = requests.request(
                     "GET", doc_url, headers=headers, data=payload
                 )
-                print("Sending request #", i, " to: ", doc_url)
                 break
             except (
                 requests.exceptions.ConnectTimeout,

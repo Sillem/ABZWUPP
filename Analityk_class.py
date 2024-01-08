@@ -6,12 +6,23 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from scipy.cluster.hierarchy import dendrogram, linkage
-
+import sklearn.cluster as cl
+import matplotlib.lines as mlines
+import mplcursors 
 
 class Analityk(object):
-    
-    #wykres słupkowy z udziałami dziesięciu najczęściej występujących kodów
+    """
+    Klasa Analityk ma za zadanie wizualizowac dane pobrane ze strony https://sylabusy.sggw.edu.pl za pomoca 
+    klasy Scraper. 
+    """
     def draw_plot_01(self, file_name):
+        """ 
+        Ta funkcja rysuje wykres slupkowy z udzialem procentowym 10 najczesciej wystepujacych
+        kodow na danym kierunku nauczania.
+
+        Args:
+            file_name (str): string z nazwa wybranego kierunku studiow
+        """
         current_path = os.path.dirname(__file__)
         default_path = os.path.abspath(os.path.join(current_path, os.pardir))
         folder_path = os.path.join(default_path, "Selected_fields_of_study", f"{file_name}")
@@ -40,8 +51,13 @@ class Analityk(object):
         plt.grid(True)
         st.pyplot(plt)
 
-    # Rysowanie wykresu kołowego z procentowym udziałem dziesięciu najczęściej występujących kodów
     def draw_plot_02(self, file_name):
+        """Ta funkcja rysuje wykres kolowy z procentowym udzialem 10 najczesciej wystepujacych kodow na 
+        danym kierunku nauczania.
+
+        Args:
+            file_name (str): string z nazwa wybranego kierunku studiow
+        """
         current_path = os.path.dirname(__file__)
         default_path = os.path.abspath(os.path.join(current_path, os.pardir))
         folder_path = os.path.join(default_path, "Selected_fields_of_study", f"{file_name}")
@@ -64,8 +80,16 @@ class Analityk(object):
         plt.axis('equal')
 
         st.pyplot(plt)
-
-    def plot_results(self, model, title, file_name):
+    def plot_results(self, file_name, model = cl.KMeans(n_clusters=3), title="KMeans",):
+        """
+            Ta funkcja rysuje wykres punktowy z przypisaniem poszczegolnych przedmiotow z danego kierunku
+            do podobnych klastrow.
+        
+        Args:
+            model (sklearn.cluster): wybrany model z pakietu sklearn, domyslnie kmeans z podzialem na 3 klastry
+            title (str):  string z nazwa wykresu
+            file_name (str): string z nazwa wybranego kierunku studiow
+        """
         current_path = os.path.dirname(__file__)
         default_path = os.path.abspath(os.path.join(current_path, os.pardir))
         folder_path = os.path.join(default_path, "Selected_fields_of_study", f"{file_name}")
@@ -76,25 +100,48 @@ class Analityk(object):
         scaled_df = scaler.fit_transform(df)
         scaled_df = pd.DataFrame(scaled_df, index=df.index, columns=df.columns)
         final_df = scaled_df.copy()    
-        
+        country_codes = {country:idx for idx, country in enumerate(final_df.index)}
         cluster_preds = model.fit_predict(final_df)
 
         pca = PCA(n_components=2)
         dim_reduced_df = pca.fit_transform(final_df)
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 8))
-
         if cluster_preds.size:
             ax.set_title(f"Podział obiektów według metody {title}, liczba klastrów = {np.unique(cluster_preds).shape[0]}")
-            ax.scatter(dim_reduced_df[:, 0], dim_reduced_df[:, 1], c=cluster_preds, cmap='cool')
+            wykres = ax.scatter(dim_reduced_df[:, 0], dim_reduced_df[:, 1], c=cluster_preds, cmap='cool')
         else:
-            ax.scatter(dim_reduced_df[:, 0], dim_reduced_df[:, 1])
-        for num, country in enumerate(final_df.index):
-            plt.text(dim_reduced_df[num, 0], dim_reduced_df[num,1], country)
+            wykres = ax.scatter(dim_reduced_df[:, 0], dim_reduced_df[:, 1])
 
+        cursor = mplcursors.cursor(wykres, hover=True)
+
+        @cursor.connect("add")
+        def on_add(sel):
+            index = sel.target.index
+            przedmiot = final_df.index[index]
+            sel.annotation.set_text(f'Przedmiot: {przedmiot}')
+            
         st.pyplot(plt)
+        """
+        legend_handles =[]
+        for num,country in enumerate(final_df.index):
+            plt.text(dim_reduced_df[num, 0], dim_reduced_df[num,1], num)
+        for num, country in enumerate(final_df.index):
+            point_marker = mlines.Line2D(dim_reduced_df[0], dim_reduced_df[1], 
+                                          label = f"{num} - {country}")
+            legend_handles.append(point_marker) 
+
+        ax.legend(title= "Legenda", handles = legend_handles,  bbox_to_anchor=(1.05, 1.0), loc='upper left')
+        """
         
-    # Rysowanie dendogramu
-    def dendogram(self,title, file_name):
+        
+    def dendogram(self, file_name, title = "ward"):
+        """
+        Ta funkcja rysuje dendrogram ukazujacy zwiazki miedzy przedmiotami na wybranym kierunku nauczania.
+
+        Args:
+            title (str): string z nazwa wybranej metody tworzenia dendrogramu, domyslnie ward
+            file_name (str): string z nazwa wybranego kierunku studiow
+        """
         current_path = os.path.dirname(__file__)
         default_path = os.path.abspath(os.path.join(current_path, os.pardir))
         folder_path = os.path.join(default_path, "Selected_fields_of_study", f"{file_name}")
