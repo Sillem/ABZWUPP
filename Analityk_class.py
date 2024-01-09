@@ -9,6 +9,7 @@ from scipy.cluster.hierarchy import dendrogram, linkage
 import sklearn.cluster as cl
 import matplotlib.lines as mlines
 import mplcursors 
+import plotly.express as px
 
 class Analityk(object):
     """
@@ -100,27 +101,25 @@ class Analityk(object):
         scaled_df = scaler.fit_transform(df)
         scaled_df = pd.DataFrame(scaled_df, index=df.index, columns=df.columns)
         final_df = scaled_df.copy()    
-        country_codes = {country:idx for idx, country in enumerate(final_df.index)}
         cluster_preds = model.fit_predict(final_df)
-
+        cluster_preds +=1
         pca = PCA(n_components=2)
         dim_reduced_df = pca.fit_transform(final_df)
-        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 8))
-        if cluster_preds.size:
+        dim_reduced_df = pd.DataFrame(dim_reduced_df, columns=['PC1', 'PC2'])
+        dim_reduced_df['Przedmiot'] = final_df.index
+        dim_reduced_df['Cluster'] = cluster_preds
+        """fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 8))"""
+        """if cluster_preds.size:
             ax.set_title(f"Podział obiektów według metody {title}, liczba klastrów = {np.unique(cluster_preds).shape[0]}")
             wykres = ax.scatter(dim_reduced_df[:, 0], dim_reduced_df[:, 1], c=cluster_preds, cmap='cool')
         else:
-            wykres = ax.scatter(dim_reduced_df[:, 0], dim_reduced_df[:, 1])
-
-        cursor = mplcursors.cursor(wykres, hover=True)
-
-        @cursor.connect("add")
-        def on_add(sel):
-            index = sel.target.index
-            przedmiot = final_df.index[index]
-            sel.annotation.set_text(f'Przedmiot: {przedmiot}')
-            
-        st.pyplot(plt)
+            wykres = ax.scatter(dim_reduced_df[:, 0], dim_reduced_df[:, 1])"""
+        dim_reduced_df['Cluster'] = dim_reduced_df['Cluster'].astype(str)
+        fig = px.scatter(dim_reduced_df, x='PC1', y='PC2', color='Cluster', hover_data=['Przedmiot'], title =\
+                         f"Podział obiektów wg metody {title}, liczba klastrów = {np.unique(cluster_preds).shape[0]}")
+        fig.update_layout()
+        st.plotly_chart(fig)
+        """st.pyplot(plt)"""
         """
         legend_handles =[]
         for num,country in enumerate(final_df.index):
