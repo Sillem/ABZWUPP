@@ -10,6 +10,11 @@ from time import time
 
 
 class GUI(object):
+    """
+    Klasa odpowiedzialna za tworzenie interfejsu i wyświetlanie wyników analiz danych uzyskanych 
+    za pomocą klas Analityk i Scraper. 
+
+    """
     def __init__(self):
         """
         konstruktor tworzący obiekty klas `Scraper` i `Analityk`
@@ -182,8 +187,7 @@ class GUI(object):
         for i, item in enumerate(a_tags2):
             fields.append(item.get_text().strip())
             sublinks.append(domain_url + item.get("href"))
-        selected_field = st.selectbox("Wybierz kierunek: ", fields)
-        print("selected field" + str(type(selected_field)))  
+        selected_field = st.selectbox("Wybierz kierunek: ", fields) 
 
         return selected_field, fields, sublinks
 
@@ -246,11 +250,9 @@ class GUI(object):
 
         ### Wybór języka studiów ###
         selected_language, languages, forms, url = self.get_language(bs)
-        print("selected language" + str(type(selected_language)) + " langueages" + str(type(languages)))
-        print(languages)
+        
         response = requests.request("GET", url, headers=headers, data=payload)
         bs = BeautifulSoup(response.content, "html.parser")
-        print("bs "+ str(type(bs)))
 
         ### Wybór formy studiów (stacjonarne/niestacjonarne) ###
         selected_form, url, levels = self.get_form(
@@ -258,14 +260,12 @@ class GUI(object):
         )
         response = requests.request("GET", url, headers=headers, data=payload)
         bs = BeautifulSoup(response.content, "html.parser")
-        print("levels" + str(type(levels)))
+
 
         ### Wybór stopnia studiów (licencjat,inżynier itp.) ###
         selected_level, url = self.get_level(
             selected_language, languages, selected_form, forms, levels
         )
-        print(type(url))
-        print(url)
         ### Wybór wydziału ###
         selected_faculty, faculties, links = self.get_faculties(url)
         for i in range(len(faculties)):
@@ -276,13 +276,12 @@ class GUI(object):
         sub_url = links[chosen_one]
         selected_field, fields, sublinks = self.get_field(sub_url)
 
-        print("sub-rul" + str(type(sub_url)))
 
         for i in range(len(fields)):
             if selected_field == fields[i]:
                 chosen_one2 = i
         sub_sub_url = sublinks[chosen_one2]
-        print(sub_sub_url)
+
 
         ### Tworzenie przycisku zatwierdzającego wybory ###
         if st.button("Zatwierdź wybory"):
@@ -295,8 +294,8 @@ class GUI(object):
             # Pobieranie słowników z efektami kształcenia, treściami programowymi i kodów z wybranego kierunku
             start = time()
             self.scraper.save_data(
-                selected_field
-            )  # Tworzenie excela z przedmiotami wybranego kierunku z przyporządkowanymi liczbami poszczególnych kodów
+                selected_field) 
+             # Tworzenie excela z przedmiotami wybranego kierunku z przyporządkowanymi liczbami poszczególnych kodów
             print(f"Tworzenie excela zajęło {(time() - start):.{2}f} sekund")
             default_path = os.path.abspath(
                 os.path.join(os.path.dirname(__file__), os.pardir)
@@ -347,7 +346,7 @@ class GUI(object):
                 cl.KMeans(n_clusters=3), "KMeans"
             )  # próba narysowania wykresu z podziałem na klastry
             print("model " + str(type(cl.KMeans(n_clusters=3))))
-            st.markdown("## Dendogram")
+            st.markdown("## Dendrogram")
             self.analityk.dendogram(selected_field)  # dendogram metodą Warda
             print(f"Wyświetlanie danych zajęło {(time() - start):.{2}f} sekund")
             progress_bar.progress(100)

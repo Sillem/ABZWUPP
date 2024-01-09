@@ -84,8 +84,8 @@ class Analityk(object):
     def plot_results(self, file_name, model = cl.KMeans(n_clusters=3), title="KMeans",):
         """
             Ta funkcja rysuje wykres punktowy z przypisaniem poszczegolnych przedmiotow z danego kierunku
-            do podobnych klastrow.
-        
+            do podobnych klastrow za pomocą biblioteki plotly oraz rysuje taki sam wykres z wykorzystaniem
+            biblioteki matplotlib do zapisania w pliku .xslx.
         Args:
             model (sklearn.cluster): wybrany model z pakietu sklearn, domyslnie kmeans z podzialem na 3 klastry
             title (str):  string z nazwa wykresu
@@ -97,6 +97,7 @@ class Analityk(object):
         file_path = os.path.join(folder_path, f"{file_name}.xlsx")
         df = pd.read_excel(file_path).set_index('Przedmioty')
 
+        #wykres z ruchoma etykieta
         scaler = StandardScaler()
         scaled_df = scaler.fit_transform(df)
         scaled_df = pd.DataFrame(scaled_df, index=df.index, columns=df.columns)
@@ -108,19 +109,26 @@ class Analityk(object):
         dim_reduced_df = pd.DataFrame(dim_reduced_df, columns=['PC1', 'PC2'])
         dim_reduced_df['Przedmiot'] = final_df.index
         dim_reduced_df['Cluster'] = cluster_preds
-        """fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 8))"""
-        """if cluster_preds.size:
-            ax.set_title(f"Podział obiektów według metody {title}, liczba klastrów = {np.unique(cluster_preds).shape[0]}")
-            wykres = ax.scatter(dim_reduced_df[:, 0], dim_reduced_df[:, 1], c=cluster_preds, cmap='cool')
-        else:
-            wykres = ax.scatter(dim_reduced_df[:, 0], dim_reduced_df[:, 1])"""
+        
+
         dim_reduced_df['Cluster'] = dim_reduced_df['Cluster'].astype(str)
         fig = px.scatter(dim_reduced_df, x='PC1', y='PC2', color='Cluster', hover_data=['Przedmiot'], title =\
                          f"Podział obiektów wg metody {title}, liczba klastrów = {np.unique(cluster_preds).shape[0]}")
         fig.update_layout()
         st.plotly_chart(fig)
-        """st.pyplot(plt)"""
-        """
+        
+
+        # wykres do eksportu
+        cluster_preds -=1
+        dim_reduced_df = pca.fit_transform(final_df)
+
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(30, 24))
+        if cluster_preds.size:
+            ax.set_title(f"Podział obiektów według metody {title}, liczba klastrów = {np.unique(cluster_preds).shape[0]}")
+            wykres = ax.scatter(dim_reduced_df[:, 0], dim_reduced_df[:, 1], c=cluster_preds, cmap='cool')
+        else:
+            wykres = ax.scatter(dim_reduced_df[:, 0], dim_reduced_df[:, 1])
+
         legend_handles =[]
         for num,country in enumerate(final_df.index):
             plt.text(dim_reduced_df[num, 0], dim_reduced_df[num,1], num)
@@ -128,9 +136,8 @@ class Analityk(object):
             point_marker = mlines.Line2D(dim_reduced_df[0], dim_reduced_df[1], 
                                           label = f"{num} - {country}")
             legend_handles.append(point_marker) 
-
         ax.legend(title= "Legenda", handles = legend_handles,  bbox_to_anchor=(1.05, 1.0), loc='upper left')
-        """
+        plt.savefig("wykres.svg", format='svg', bbox_inches='tight', pad_inches=0.1)
         
         
     def dendogram(self, file_name, title = "ward"):
