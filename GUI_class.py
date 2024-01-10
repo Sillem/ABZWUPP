@@ -11,10 +11,11 @@ from time import time
 
 class GUI(object):
     """
-    Klasa odpowiedzialna za tworzenie interfejsu i wyświetlanie wyników analiz danych uzyskanych 
-    za pomocą klas Analityk i Scraper. 
+    Klasa odpowiedzialna za tworzenie interfejsu i wyświetlanie wyników analiz danych uzyskanych
+    za pomocą klas Analityk i Scraper.
 
     """
+
     def __init__(self):
         """
         konstruktor tworzący obiekty klas `Scraper` i `Analityk`
@@ -25,7 +26,7 @@ class GUI(object):
     def get_level(self, selected_language, languages, selected_form, forms, levels):
         """
 
-        Ta funkcja wybiera poziom studiow i zwraca wybrany poziom oraz URL do szczegolowych danych. 
+        Ta funkcja wybiera poziom studiow i zwraca wybrany poziom oraz URL do szczegolowych danych.
 
         Args:
             selected_language (str): string z nazwa wybranego jezyka
@@ -36,7 +37,7 @@ class GUI(object):
 
         Returns:
             str selected_level: string z wybranym poziomem studiow
-            str url: str z linkiem do podstrony z kierunkami studiow na danym poziomie 
+            str url: str z linkiem do podstrony z kierunkami studiow na danym poziomie
         """
         selected_level = st.selectbox("Wybierz stopień studiów: ", levels)
 
@@ -132,13 +133,13 @@ class GUI(object):
         Ta funkcja wybiera wydział i zwraca wybrany wydział, listę dostępnych wydziałów i linki do nich.
 
         Args:
-            url (str): string z linkiem do podstrony z wydzialami na wybranym wczesniej poziomie, formie i 
+            url (str): string z linkiem do podstrony z wydzialami na wybranym wczesniej poziomie, formie i
             jezyku
 
         Returns:
             str selected_faculty: string z nazwa wybranego wydzialu
             list faculties: lista z dostepnymi do wyboru kierunkami studiow
-            lista links: lista z linkami do faculties 
+            lista links: lista z linkami do faculties
         """
         payload = {}
         domain_url = "https://sylabus.sggw.edu.pl"
@@ -162,7 +163,7 @@ class GUI(object):
 
     def get_field(self, sub_url):
         """
-        Ta funkcja wybiera kierunek studiow i zwraca pola: selected field, fields, 
+        Ta funkcja wybiera kierunek studiow i zwraca pola: selected field, fields,
         czyli wszystkie kierunki na wydziale oraz sublinks czyli
          podlinki do tych kierunków
         Args:
@@ -172,7 +173,7 @@ class GUI(object):
             str selected_filed: string z wybranym kierunkiem studiow
             list fields: lista z dostepnymi do wyboru kierunkami studiow
             list sublinks: lista z linkami do przedmiotow na danym kierunku
-        """    
+        """
         payload = {}
         domain_url = "https://sylabus.sggw.edu.pl"
         headers = {
@@ -187,7 +188,7 @@ class GUI(object):
         for i, item in enumerate(a_tags2):
             fields.append(item.get_text().strip())
             sublinks.append(domain_url + item.get("href"))
-        selected_field = st.selectbox("Wybierz kierunek: ", fields) 
+        selected_field = st.selectbox("Wybierz kierunek: ", fields)
 
         return selected_field, fields, sublinks
 
@@ -227,11 +228,10 @@ class GUI(object):
 
         return selected_language, languages, forms, url
 
-
     def create_formularz(self):
         """
-        Ta funkcja odpowaida za caly interfejs aplikacji webowej tworzonej za pomoca modulu streamlit - 
-        wyswietlanie pol wyboru, wykresow i innych komunkatow. 
+        Ta funkcja odpowaida za caly interfejs aplikacji webowej tworzonej za pomoca modulu streamlit -
+        wyswietlanie pol wyboru, wykresow i innych komunkatow.
 
         """
         url = "https://sylabus.sggw.edu.pl/pl/1/19/3/4/40"
@@ -247,10 +247,9 @@ class GUI(object):
             "Aplikacja do badania zależności wiedzy i umiejętności pomiędzy przedmiotami"
         )  # Tytuł aplikacji
 
-
         ### Wybór języka studiów ###
         selected_language, languages, forms, url = self.get_language(bs)
-        
+
         response = requests.request("GET", url, headers=headers, data=payload)
         bs = BeautifulSoup(response.content, "html.parser")
 
@@ -260,7 +259,6 @@ class GUI(object):
         )
         response = requests.request("GET", url, headers=headers, data=payload)
         bs = BeautifulSoup(response.content, "html.parser")
-
 
         ### Wybór stopnia studiów (licencjat,inżynier itp.) ###
         selected_level, url = self.get_level(
@@ -276,12 +274,10 @@ class GUI(object):
         sub_url = links[chosen_one]
         selected_field, fields, sublinks = self.get_field(sub_url)
 
-
         for i in range(len(fields)):
             if selected_field == fields[i]:
                 chosen_one2 = i
         sub_sub_url = sublinks[chosen_one2]
-
 
         ### Tworzenie przycisku zatwierdzającego wybory ###
         if st.button("Zatwierdź wybory"):
@@ -294,9 +290,8 @@ class GUI(object):
             # Pobieranie słowników z efektami kształcenia, treściami programowymi i kodów z wybranego kierunku
 
             start = time()
-            self.scraper.save_data(
-                selected_field) 
-             # Tworzenie excela z przedmiotami wybranego kierunku z przyporządkowanymi liczbami poszczególnych kodów
+            self.scraper.save_data(selected_field)
+            # Tworzenie excela z przedmiotami wybranego kierunku z przyporządkowanymi liczbami poszczególnych kodów
             print(f"Tworzenie excela zajęło {(time() - start):.{2}f} sekund")
             default_path = os.path.abspath(
                 os.path.join(os.path.dirname(__file__), os.pardir)
@@ -308,7 +303,7 @@ class GUI(object):
             progress_bar.progress(80)
             ### Zapisywanie plików json ###
             start = time()
-            self.scraper.save_json(selected_field, codes, effects, contents) 
+            self.scraper.save_json(selected_field, codes, effects, contents)
             print(
                 f"Zapisywanie treści programowych zajęło {(time() - start):.{2}f} sekund."
             )
@@ -318,18 +313,18 @@ class GUI(object):
             st.subheader("Opis wybranego kierunku")
             self.scraper.get_description(selected_field, sub_sub_url)
             st.markdown("# Wyniki analizy")
-            st.markdown("## Wykres słupkowy")
+            st.markdown("### Wykres słupkowy")
             st.text("Dziesięć najczęściej występujących kodów na wybranym kierunku")
             self.analityk.draw_plot_01(selected_field)
-            st.markdown("## Wykres kołowy ")
+            st.markdown("### Wykres kołowy ")
             st.text("Procentowy udział dzięcięciu najczęściej występujących kodów")
             self.analityk.draw_plot_02(selected_field)
-            st.markdown("## Klasteryzacja")
-            self.analityk.plot_results(selected_field,
-                cl.KMeans(n_clusters=3), "KMeans"
+            st.markdown("### Klasteryzacja")
+            self.analityk.plot_results(
+                selected_field, cl.KMeans(n_clusters=3), "KMeans"
             )  # próba narysowania wykresu z podziałem na klastry
             print("model " + str(type(cl.KMeans(n_clusters=3))))
-            st.markdown("## Dendrogram")
+            st.markdown("### Dendrogram")
             self.analityk.dendrogram(selected_field)  # dendrogram metodą Warda
             print(f"Wyświetlanie danych zajęło {(time() - start):.{2}f} sekund")
             progress_bar.progress(100)
