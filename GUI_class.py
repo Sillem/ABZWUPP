@@ -292,6 +292,7 @@ class GUI(object):
             effects, contents, codes = self.scraper.get_data(sub_sub_url, progress_bar)
             print(f"Pobieranie danych zajęło {(time() - start):.{2}f} sekund")
             # Pobieranie słowników z efektami kształcenia, treściami programowymi i kodów z wybranego kierunku
+
             start = time()
             self.scraper.save_data(
                 selected_field) 
@@ -305,27 +306,9 @@ class GUI(object):
                 default_path, field_names_folder, f"{selected_field}"
             )
             progress_bar.progress(80)
+            ### Zapisywanie plików json ###
             start = time()
-
-            ### ZAPISYWANIE EFEKTÓW UCZENIA SIE ###
-            with open(
-                os.path.join(folder_path, "efekty_uczenia.json"), "w", encoding="utf-8"
-            ) as json_file:
-                json.dump(effects, json_file, ensure_ascii=False)
-
-            ### ZAPISYWANIE TRESCI PROGRAMOWYCH ###
-            with open(
-                os.path.join(folder_path, "tresci_programowe.json"),
-                "w",
-                encoding="utf-8",
-            ) as json_file:
-                json.dump(contents, json_file, ensure_ascii=False)
-
-            ### ZAPISYWANIE KODÓW ###
-            with open(
-                os.path.join(folder_path, "kody2.json"), "w", encoding="utf-8"
-            ) as json_file:
-                json.dump(codes, json_file, ensure_ascii=False)
+            self.scraper.save_json(selected_field, codes, effects, contents) 
             print(
                 f"Zapisywanie treści programowych zajęło {(time() - start):.{2}f} sekund."
             )
@@ -347,7 +330,7 @@ class GUI(object):
             )  # próba narysowania wykresu z podziałem na klastry
             print("model " + str(type(cl.KMeans(n_clusters=3))))
             st.markdown("## Dendrogram")
-            self.analityk.dendogram(selected_field)  # dendogram metodą Warda
+            self.analityk.dendrogram(selected_field)  # dendrogram metodą Warda
             print(f"Wyświetlanie danych zajęło {(time() - start):.{2}f} sekund")
             progress_bar.progress(100)
 

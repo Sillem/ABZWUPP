@@ -10,60 +10,33 @@ import sklearn.cluster as cl
 import matplotlib.lines as mlines
 import mplcursors 
 import plotly.express as px
+from plotly.figure_factory import create_dendrogram
+import json
 
 class Analityk(object):
     """
     Klasa Analityk ma za zadanie wizualizowac dane pobrane ze strony https://sylabusy.sggw.edu.pl za pomoca 
     klasy Scraper. 
     """
+
+
     def draw_plot_01(self, file_name):
         """ 
-        Ta funkcja rysuje wykres slupkowy z udzialem procentowym 10 najczesciej wystepujacych
-        kodow na danym kierunku nauczania.
+        Ta funkcja rysuje wykres słupkowy z udziałem procentowym 10 najczęściej występujących
+        kodów na danym kierunku nauczania.
 
         Args:
-            file_name (str): string z nazwa wybranego kierunku studiow
+            file_name (str): string z nazwą wybranego kierunku studiów
         """
         current_path = os.path.dirname(__file__)
         default_path = os.path.abspath(os.path.join(current_path, os.pardir))
         folder_path = os.path.join(default_path, "Selected_fields_of_study", f"{file_name}")
-        file_path = os.path.join(folder_path, f"{file_name}.xlsx")
-        df = pd.read_excel(file_path).set_index('Przedmioty')
+        file_path_excel = os.path.join(folder_path, f"{file_name}.xlsx")
+        df = pd.read_excel(file_path_excel).set_index('Przedmioty')
 
-        plt.figure(figsize=(12, 6))
-
-        suma_codes = [df[col].sum() for col in df.columns]
-        słownik = {col: suma for col, suma in zip(df.columns, suma_codes)}
-        sorted_słownik = dict(sorted(słownik.items(), key=lambda item: item[1], reverse=True)[:10])  # Sortowanie i wybór 10 największych wartości
-
-        variable_names = list(sorted_słownik.keys())  # Zmienne z największymi sumami
-        suma_codes = list(sorted_słownik.values())   # Sumy odpowiadające tym zmiennym
-
-        bar_plot = plt.bar(variable_names, suma_codes, color="orange")
-
-        plt.xticks(rotation=45, ha='right')  
-        plt.xlabel('Kody')
-        plt.ylabel('Liczebność')
-        #plt.title('Dziesięć najczęściej występujących kodów')
-
-        for bar, name in zip(bar_plot, variable_names):
-            plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), name, ha='center', va='bottom', fontsize=8)
-
-        plt.grid(True)
-        st.pyplot(plt)
-
-    def draw_plot_02(self, file_name):
-        """Ta funkcja rysuje wykres kolowy z procentowym udzialem 10 najczesciej wystepujacych kodow na 
-        danym kierunku nauczania.
-
-        Args:
-            file_name (str): string z nazwa wybranego kierunku studiow
-        """
-        current_path = os.path.dirname(__file__)
-        default_path = os.path.abspath(os.path.join(current_path, os.pardir))
-        folder_path = os.path.join(default_path, "Selected_fields_of_study", f"{file_name}")
-        file_path = os.path.join(folder_path, f"{file_name}.xlsx")
-        df = pd.read_excel(file_path).set_index('Przedmioty')
+        file_path_des = os.path.join(folder_path, "opis_kodow.json")
+        with open(file_path_des, 'r') as plik_json:
+            codes = json.load(plik_json)
 
         suma_codes = [df[col].sum() for col in df.columns]
         słownik = {col: suma for col, suma in zip(df.columns, suma_codes)}
@@ -72,15 +45,149 @@ class Analityk(object):
         variable_names = list(sorted_słownik.keys())
         suma_codes = list(sorted_słownik.values())
 
-        palette = plt.cm.get_cmap('tab20b', len(variable_names))
-        colors = palette(np.linspace(0, 1, len(variable_names)))
+        dict_plot = {}
+        for name in variable_names:
+            for kod, opis in codes.items():
+                if kod == name:
+                    dict_plot[kod] = opis
 
-        plt.figure(figsize=(8, 8))
-        plt.pie(suma_codes, labels=variable_names, colors = colors, autopct='%1.1f%%', startangle=140)
-        #plt.title('Procentowy udział najczęściej występujących kodów')
-        plt.axis('equal')
+        # print("Słownik do wykresu: ", dict_plot) 
+        # Tworzenie ramki danych na podstawie słownika data
+        df = pd.DataFrame(list(dict_plot.items()), columns=['Kody', 'Opisy'])
 
-        st.pyplot(plt)
+        # Dodanie wartości z tablicy values do ramki danych
+        df['Wartości'] = suma_codes
+        
+        # Skrócenie opisów do jednego zdania
+        df['Opis_skrocony'] = df['Opisy'].apply(lambda x: x.split('.')[0])  # Wybór pierwszego zdania jako skrócony opis
+        
+        fig = px.bar(df, x=variable_names, y=suma_codes, labels={'x': 'Kody', 'y': 'Liczebność'}, text='Opis_skrocony')
+        fig.update_traces(textposition='outside')
+        fig.update_layout(
+            xaxis=dict(tickangle=-45),
+            title='Dziesięć najczęściej występujących kodów',
+            xaxis_title='Kody',
+            yaxis_title='Liczebność'
+        )
+        
+        st.plotly_chart(fig)
+
+
+    # def draw_plot_01(self, file_name):
+    #     """ 
+    #     Ta funkcja rysuje wykres słupkowy z udziałem procentowym 10 najczęściej występujących
+    #     kodów na danym kierunku nauczania.
+
+    #     Args:
+    #         file_name (str): string z nazwą wybranego kierunku studiów
+    #     """
+    #     current_path = os.path.dirname(__file__) 
+    #     default_path = os.path.abspath(os.path.join(current_path, os.pardir)) 
+    #     folder_path = os.path.join(default_path, "Selected_fields_of_study", f"{file_name}") 
+
+    #     file_path = os.path.join(folder_path, f"{file_name}.xlsx")
+    #     df = pd.read_excel(file_path).set_index("Przedmioty")
+
+    #     plt.figure(figsize=(12, 6))
+        
+    #     suma_codes = [df[col].sum() for col in df.columns] 
+    #     słownik = {col: suma for col, suma in zip(df.columns, suma_codes)} 
+    #     sorted_słownik = dict(sorted(słownik.items(), key=lambda item: item[1], reverse=True)[:10])  # Sortowanie i wybór 10 największych wartości 
+        
+    #     variable_names = list(sorted_słownik.keys()) # Zmienne z największymi sumami
+    #     suma_codes = list(sorted_słownik.values()) # Sumy odpowiadające tym zmiennym
+
+    #     bar_plot = plt.bar(variable_names, suma_codes, color = "orange")
+
+    #     plt.xticks(rotation = 45, ha = 'right')
+    #     plt.xlabel('Kody')
+    #     plt.ylabel('Liczebność')
+
+    #     for bar, name in zip(bar_plot, variable_names):
+    #         plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), name, ha = 'center', va = 'bottom', fontsize = 8)
+
+    #     plt.grid(True)
+    #     st.pyplot(plt)
+
+
+    def draw_plot_02(self, file_name):
+        """Ta funkcja rysuje wykres kołowy z procentowym udziałem 10 najczęściej występujących kodów na 
+        danym kierunku nauczania.
+
+        Args:
+            file_name (str): string z nazwą wybranego kierunku studiów
+        """
+        current_path = os.path.dirname(__file__)
+        default_path = os.path.abspath(os.path.join(current_path, os.pardir))
+        folder_path = os.path.join(default_path, "Selected_fields_of_study", f"{file_name}")
+        file_path_excel = os.path.join(folder_path, f"{file_name}.xlsx")
+        df = pd.read_excel(file_path_excel).set_index('Przedmioty')
+
+        file_path_des = os.path.join(folder_path, "opis_kodow.json")
+        with open(file_path_des, 'r') as plik_json:
+            codes = json.load(plik_json)
+
+        suma_codes = [df[col].sum() for col in df.columns]
+        słownik = {col: suma for col, suma in zip(df.columns, suma_codes)}
+        sorted_słownik = dict(sorted(słownik.items(), key=lambda item: item[1], reverse=True)[:10])  # Sortowanie i wybór 10 największych wartości
+
+        variable_names = list(sorted_słownik.keys())
+        suma_codes = list(sorted_słownik.values())
+
+        dict_plot = {}
+        for name in variable_names:
+            for kod, opis in codes.items():
+                if kod == name:
+                    dict_plot[kod] = opis
+
+        # print("Słownik do wykresu: ", dict_plot) 
+        # Tworzenie ramki danych na podstawie słownika data
+        df = pd.DataFrame(list(dict_plot.items()), columns=['Kody', 'Opisy'])
+
+        # Dodanie wartości z tablicy values do ramki danych
+        df['Wartości'] = suma_codes
+        
+        # Skrócenie opisów do jednego zdania
+        df['Opis_skrocony'] = df['Opisy'].apply(lambda x: x.split('.')[0])  # Wybór pierwszego zdania jako skrócony opis
+        print(df)
+
+        fig = px.pie(df, values='Wartości', names='Kody', hover_data=['Opis_skrocony'], title='Procentowy udział najczęściej występujących kodów')
+        fig.update_traces(textinfo='percent+label', marker=dict(colors=px.colors.qualitative.T10))
+        st.plotly_chart(fig)
+
+    # def draw_plot_02(self, file_name):
+    #     """ 
+    #     Ta funkcja rysuje wykres kołowy z udziałem procentowym 10 najczęściej występujących
+    #     kodów na danym kierunku nauczania.
+
+    #     Args:
+    #         file_name (str): string z nazwą wybranego kierunku studiów
+    #     """
+    #     current_path = os.path.dirname(__file__)
+    #     default_path = os.path.abspath(os.path.join(current_path, os.pardir))
+    #     folder_path = os.path.join(default_path, "Selected_fields_of_study", f"{file_name}")
+
+    #     file_path = os.path.join(folder_path, f"{file_name}.xlsx")
+    #     df = pd.read_excel(file_path).set_index("Przedmioty")
+
+    #     plt.figure(figsize=(8, 8))
+        
+    #     suma_codes = [df[col].sum() for col in df.columns]
+    #     słownik = {col: suma for col, suma in zip(df.columns, suma_codes)}
+    #     sorted_słownik = dict(sorted(słownik.items(), key=lambda item: item[1], reverse=True)[:10])  # Sortowanie i wybór 10 największych wartości 
+        
+    #     variable_names = list(sorted_słownik.keys())  # Zmienne z największymi sumami
+    #     suma_codes = list(sorted_słownik.values())   # Sumy odpowiadające tym zmiennym
+
+    #     palette = plt.cm.get_cmap('tab20b', len(variable_names))
+    #     colors = palette(np.linspace(0, 1, len(variable_names)))
+
+    #     plt.pie(suma_codes, labels=variable_names, colors=colors, autopct='%1.1f%%', startangle=140)
+    #     plt.axis('equal')
+
+    #     st.pyplot(plt)
+
+
     def plot_results(self, file_name, model = cl.KMeans(n_clusters=3), title="KMeans",):
         """
             Ta funkcja rysuje wykres punktowy z przypisaniem poszczegolnych przedmiotow z danego kierunku
@@ -140,13 +247,15 @@ class Analityk(object):
         plt.savefig("wykres.svg", format='svg', bbox_inches='tight', pad_inches=0.1)
         
         
-    def dendogram(self, file_name, title = "ward"):
+
+
+    def dendrogram(self, file_name, title="ward"):
         """
-        Ta funkcja rysuje dendrogram ukazujacy zwiazki miedzy przedmiotami na wybranym kierunku nauczania.
+        Ta funkcja rysuje dendrogram ukazujący związki między przedmiotami na wybranym kierunku nauczania.
 
         Args:
-            title (str): string z nazwa wybranej metody tworzenia dendrogramu, domyslnie ward
-            file_name (str): string z nazwa wybranego kierunku studiow
+            title (str): string z nazwą wybranej metody tworzenia dendrogramu, domyślnie ward
+            file_name (str): string z nazwą wybranego kierunku studiów
         """
         current_path = os.path.dirname(__file__)
         default_path = os.path.abspath(os.path.join(current_path, os.pardir))

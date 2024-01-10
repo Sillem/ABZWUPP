@@ -4,7 +4,7 @@ import streamlit as st
 import os
 import openpyxl
 from time import sleep
-
+import json
 
 def remove_char(input_string, char_to_remove):
     result = ""
@@ -167,6 +167,51 @@ class Scraper(object):
 
         return codes_and_descriptions, learning_effects, course_content
 
+    def save_json(self, selected_field, codes, effects, contents):
+        
+        default_path = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), os.pardir)
+            )
+        field_names_folder = "Selected_fields_of_study"
+        folder_path = os.path.join(
+                default_path, field_names_folder, f"{selected_field}"
+            )
+
+        # Plik_01.json - zapisywanie kodów wybranego kierunku wraz z objaśnieniami
+        field_codes = list(filter(None, list(set(self.field_codes))))
+        field_codes = list(filter(lambda x: len(x) != 2, field_codes))
+        dict = {}
+        for przedmiot, kody in codes.items():
+            for kod, opis in kody.items():
+                if kod in field_codes:
+                    dict[kod] = opis
+        
+        with open(os.path.join(folder_path, "opis_kodow.json"), "w", encoding="utf-8") as json_file:
+            json.dump(dict, json_file)
+
+
+        # Plik_02.json - zapisywanie efektów uczenia się 
+        with open(
+            os.path.join(folder_path, "efekty_uczenia.json"), "w", encoding="utf-8"
+        ) as json_file:
+            json.dump(effects, json_file, ensure_ascii=False)
+
+
+        # Plik_03.json zapisywanie treści programowych
+        with open(
+            os.path.join(folder_path, "tresci_programowe.json"),
+            "w",
+            encoding="utf-8",
+        ) as json_file:
+            json.dump(contents, json_file, ensure_ascii=False)
+        
+        # Plik_04.json - zapisywanie przedmiotów wybranego kierunku oraz przyporządkowanych do nich kodów  
+        with open(
+            os.path.join(folder_path, "kody2.json"), "w", encoding="utf-8"
+        ) as json_file:
+            json.dump(codes, json_file, ensure_ascii=False)
+
+
     def save_data(self, selected_field):
         """
         Ta funkcja zapisuje pobrane dane na temat wybranego kierunku do pliku .xlsx.
@@ -176,7 +221,6 @@ class Scraper(object):
         """
         field_codes_dict = self.field_codes_dict
         field_codes = list(filter(None, list(set(self.field_codes))))
-
         field_codes = list(filter(lambda x: len(x) != 2, field_codes))
         wb = openpyxl.Workbook()
         sheet = wb.active
