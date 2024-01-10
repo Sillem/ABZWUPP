@@ -18,11 +18,11 @@ class Scraper(object):
     """
     Klasa odpowiedzialna za pobieranie danych z witryny https://sylabus.sggw.edu.pl/
 
-  
+
     """
     def __init__(self):
         """Konstruktor klasy inicjalizujacy puste listy 'subject_names', 'subject_ids',
-         'field_list_codes_and_des', 'field_codes', 'field_codes_dict' ktore beda
+        'field_list_codes_and_des', 'field_codes', 'field_codes_dict' ktore beda
         przechowywac nazwy, identyfikatory,kody i opisy przedmiotow do pozniejszego wykorzystania.
         """
         self.subject_names = []

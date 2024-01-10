@@ -12,6 +12,7 @@ import mplcursors
 import plotly.express as px
 from plotly.figure_factory import create_dendrogram
 import json
+import plotly.figure_factory as ff
 
 
 def split_string_at_nearest_space(text):
@@ -82,9 +83,9 @@ class Analityk(object):
         df["Wartości"] = suma_codes
 
         # Skrócenie opisów do jednego zdania
-        df["Opis_skrocony"] = df["Opisy"].apply(
-            lambda x: "xdddddd" + x  # split_string_at_nearest_space(x)
-        )
+        # df["Opis_skrocony"] = df["Opisy"].apply(
+        #     lambda x: "xdddddd" + x  # split_string_at_nearest_space(x)
+        # )
         # Wybór pierwszego zdania jako skrócony opis
 
         fig = px.bar(
@@ -92,7 +93,6 @@ class Analityk(object):
             x=variable_names,
             y=suma_codes,
             labels={"x": "Kody", "y": "Liczebność"},
-            text="Opis_skrocony",
         )
         fig.update_traces(textposition="outside")
         fig.update_layout(
@@ -162,7 +162,7 @@ class Analityk(object):
         suma_codes = [df[col].sum() for col in df.columns]
         słownik = {col: suma for col, suma in zip(df.columns, suma_codes)}
         sorted_słownik = dict(
-            sorted(słownik.items(), key=lambda item: item[1], reverse=True)[:10]
+            sorted(słownik.items(), key=lambda item: item[1], reverse=True)
         )  # Sortowanie i wybór 10 największych wartości
 
         variable_names = list(sorted_słownik.keys())
@@ -181,24 +181,36 @@ class Analityk(object):
         # Dodanie wartości z tablicy values do ramki danych
         df["Wartości"] = suma_codes
 
+        # Przekształcenie danych na procenty
+        df['Procentowe Wartości'] = df['Wartości'] / df['Wartości'].sum()
+        df['Procentowe Wartości'] = df['Procentowe Wartości'].map('{:.2%}'.format)
+        
+        print(df)
+        # Top 10 najczęściej występujących
+        top_10_codes = df[:10]
+
         # Skrócenie opisów do jednego zdania
         # Wybór pierwszego zdania jako skrócony opis
-        df["Opis_skrocony"] = df["Opisy"].apply(lambda x: x.split(".")[0])
-        print(df)
+        # df["Opis_skrocony"] = df["Opisy"].apply(lambda x: x.split(".")[0])
+        # print(df)
+
 
         fig = px.pie(
             df,
             values="Wartości",
             names="Kody",
-            hover_data=["Opis_skrocony"],
-            title="Procentowy udział najczęściej występujących kodów",
+            title="Procentowy udział występujących kodów na wybranym kierunku",
+            hover_data=['Procentowe Wartości'],  # Dodaj dane do wyświetlania podczas najechania myszą
+            labels={'Kody': 'Kod', 'Wartości': 'Liczba wystąpień', 'Procentowe Wartości': 'Procent'}
         )
         fig.update_traces(
-            textinfo="percent+label", marker=dict(colors=px.colors.qualitative.T10)
+            textposition='inside',
+            textinfo='percent+label',
+            marker=dict(colors=px.colors.qualitative.T10)
         )
         st.plotly_chart(fig)
         st.markdown("(kliknij dwukrotnie na opis, żeby wyświetlić całość)")
-        st.dataframe(data=df[["Kody", "Wartości", "Opisy"]])
+        st.dataframe(data=top_10_codes[["Kody", "Wartości", "Opisy"]])
 
     # def draw_plot_02(self, file_name):
     #     """
@@ -311,7 +323,43 @@ class Analityk(object):
         )
         plt.savefig("wykres.svg", format="svg", bbox_inches="tight", pad_inches=0.1)
 
-    def dendrogram(self, file_name, title="ward"):
+    # def dendrogram_func(self, file_name, title="ward"):
+    #     """
+    #     Ta funkcja rysuje dendrogram ukazujący związki między przedmiotami na wybranym kierunku nauczania.
+
+    #     Args:
+    #         title (str): string z nazwą wybranej metody tworzenia dendrogramu, domyślnie ward
+    #         file_name (str): string z nazwą wybranego kierunku studiów
+    #     """
+    #     current_path = os.path.dirname(__file__)
+    #     default_path = os.path.abspath(os.path.join(current_path, os.pardir))
+    #     folder_path = os.path.join(
+    #         default_path, "Selected_fields_of_study", f"{file_name}"
+    #     )
+    #     file_path = os.path.join(folder_path, f"{file_name}.xlsx")
+    #     df = pd.read_excel(file_path).set_index("Przedmioty")
+
+    #     scaler = StandardScaler()
+    #     scaled_df = scaler.fit_transform(df)
+    #     scaled_df = pd.DataFrame(scaled_df, index=df.index, columns=df.columns)
+    #     final_df = scaled_df.copy()
+
+    #     linked = linkage(final_df, f"{title}")
+    #     plt.figure(figsize=(12, 8))
+    #     dendrogram(
+    #         linked,
+    #         labels=df.index,
+    #         orientation="right",
+    #         distance_sort="descending",
+    #         show_leaf_counts=True,
+    #     )
+
+    #     plt.title(f"Dendrogram - {title}")
+    #     plt.xlabel("Objects")
+    #     plt.ylabel("Distance")
+    #     st.pyplot(plt)
+
+    def dendrogram_func(self, file_name, title="ward"):
         """
         Ta funkcja rysuje dendrogram ukazujący związki między przedmiotami na wybranym kierunku nauczania.
 
@@ -333,16 +381,25 @@ class Analityk(object):
         final_df = scaled_df.copy()
 
         linked = linkage(final_df, f"{title}")
-        plt.figure(figsize=(12, 8))
-        dendrogram(
-            linked,
+
+        # Create dendrogram with right orientation using plotly.figure_factory
+        dendrogram = ff.create_dendrogram(
+            final_df.T,
             labels=df.index,
-            orientation="right",
-            distance_sort="descending",
-            show_leaf_counts=True,
+            orientation="left",  
+            linkagefun=lambda x: linked
+        )
+        
+        dendrogram.update_layout(
+            xaxis=dict(title="Distance"),
+            yaxis=dict(title="Objects"),
+            title=f"Dendrogram - {title}",
+            width=800,
+            height=600,
         )
 
-        plt.title(f"Dendrogram - {title}")
-        plt.xlabel("Objects")
-        plt.ylabel("Distance")
-        st.pyplot(plt)
+        # Show the interactive dendrogram
+        st.plotly_chart(dendrogram)
+
+
+

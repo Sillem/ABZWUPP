@@ -85,7 +85,7 @@ class GUI(object):
     def get_form(self, bs, selected_language, languages, forms):
         """
         Wybiera formę studiów (stacjonarne/niestacjonarne) i zwraca wybraną formę,
-          URL i listę dostępnych poziomów studiów.
+        URL i listę dostępnych poziomów studiów.
 
         Args:
             bs (class 'bs4.BeautifulSoup'): obiekt klasy BeautifulSoup do tworzenia zapytan
@@ -165,7 +165,7 @@ class GUI(object):
         """
         Ta funkcja wybiera kierunek studiow i zwraca pola: selected field, fields,
         czyli wszystkie kierunki na wydziale oraz sublinks czyli
-         podlinki do tych kierunków
+        podlinki do tych kierunków
         Args:
             sub_url (str): string z linkiem do wybranego wydzialu
 
@@ -195,7 +195,7 @@ class GUI(object):
     def get_language(self, bs):
         """
         Ta funkcja wybiera język studiów i zwraca wybrany język, listę dostępnych języków,
-         dostępne formy studiów i URL strony.
+        dostępne formy studiów i URL strony.
 
         Args:
             bs (class 'bs4.BeautifulSoup'): obiekt klasy BeautifulSoup do tworzenia zapytan
@@ -314,10 +314,8 @@ class GUI(object):
             self.scraper.get_description(selected_field, sub_sub_url)
             st.markdown("# Wyniki analizy")
             st.markdown("### Wykres słupkowy")
-            st.text("Dziesięć najczęściej występujących kodów na wybranym kierunku")
             self.analityk.draw_plot_01(selected_field)
             st.markdown("### Wykres kołowy ")
-            st.text("Procentowy udział dzięcięciu najczęściej występujących kodów")
             self.analityk.draw_plot_02(selected_field)
             st.markdown("### Klasteryzacja")
             self.analityk.plot_results(
@@ -325,7 +323,7 @@ class GUI(object):
             )  # próba narysowania wykresu z podziałem na klastry
             print("model " + str(type(cl.KMeans(n_clusters=3))))
             st.markdown("### Dendrogram")
-            self.analityk.dendrogram(selected_field)  # dendrogram metodą Warda
+            self.analityk.dendrogram_func(selected_field)  # dendrogram metodą Warda
             print(f"Wyświetlanie danych zajęło {(time() - start):.{2}f} sekund")
             progress_bar.progress(100)
 
