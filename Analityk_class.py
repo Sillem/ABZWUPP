@@ -14,6 +14,9 @@ from plotly.figure_factory import create_dendrogram
 import json
 import plotly.figure_factory as ff
 
+from openpyxl import Workbook
+from openpyxl.drawing.image import Image
+
 
 def split_string_at_nearest_space(text):
     # Find the index of the nearest space to the center
@@ -182,9 +185,9 @@ class Analityk(object):
         df["Wartości"] = suma_codes
 
         # Przekształcenie danych na procenty
-        df['Procentowe Wartości'] = df['Wartości'] / df['Wartości'].sum()
-        df['Procentowe Wartości'] = df['Procentowe Wartości'].map('{:.2%}'.format)
-        
+        df["Procentowe Wartości"] = df["Wartości"] / df["Wartości"].sum()
+        df["Procentowe Wartości"] = df["Procentowe Wartości"].map("{:.2%}".format)
+
         print(df)
         # Top 10 najczęściej występujących
         top_10_codes = df[:10]
@@ -194,23 +197,31 @@ class Analityk(object):
         # df["Opis_skrocony"] = df["Opisy"].apply(lambda x: x.split(".")[0])
         # print(df)
 
-
         fig = px.pie(
             df,
             values="Wartości",
             names="Kody",
             title="Procentowy udział występujących kodów na wybranym kierunku",
-            hover_data=['Procentowe Wartości'],  # Dodaj dane do wyświetlania podczas najechania myszą
-            labels={'Kody': 'Kod', 'Wartości': 'Liczba wystąpień', 'Procentowe Wartości': 'Procent'}
+            hover_data=[
+                "Procentowe Wartości"
+            ],  # Dodaj dane do wyświetlania podczas najechania myszą
+            labels={
+                "Kody": "Kod",
+                "Wartości": "Liczba wystąpień",
+                "Procentowe Wartości": "Procent",
+            },
         )
         fig.update_traces(
-            textposition='inside',
-            textinfo='percent+label',
-            marker=dict(colors=px.colors.qualitative.T10)
+            textposition="inside",
+            textinfo="percent+label",
+            marker=dict(colors=px.colors.qualitative.T10),
         )
         st.plotly_chart(fig)
         st.markdown("(kliknij dwukrotnie na opis, żeby wyświetlić całość)")
         st.dataframe(data=top_10_codes[["Kody", "Wartości", "Opisy"]])
+
+        codes_ranking_path = os.path.join(folder_path, "Ranking kodów.xlsx")
+        df.to_excel(codes_ranking_path, index=False)
 
     # def draw_plot_02(self, file_name):
     #     """
@@ -384,12 +395,9 @@ class Analityk(object):
 
         # Create dendrogram with right orientation using plotly.figure_factory
         dendrogram = ff.create_dendrogram(
-            final_df.T,
-            labels=df.index,
-            orientation="left",  
-            linkagefun=lambda x: linked
+            final_df.T, labels=df.index, orientation="left", linkagefun=lambda x: linked
         )
-        
+
         dendrogram.update_layout(
             xaxis=dict(title="Distance"),
             yaxis=dict(title="Objects"),
@@ -400,6 +408,3 @@ class Analityk(object):
 
         # Show the interactive dendrogram
         st.plotly_chart(dendrogram)
-
-
-
