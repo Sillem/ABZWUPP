@@ -189,8 +189,8 @@ class Analityk(object):
         df["Procentowe Wartości"] = df["Procentowe Wartości"].map("{:.2%}".format)
 
         print(df)
-        # Top 10 najczęściej występujących
-        top_10_codes = df[:10]
+        # # Top 10 najczęściej występujących
+        # top_10_codes = df[:10]
 
         # Skrócenie opisów do jednego zdania
         # Wybór pierwszego zdania jako skrócony opis
@@ -218,7 +218,7 @@ class Analityk(object):
         )
         st.plotly_chart(fig)
         st.markdown("(kliknij dwukrotnie na opis, żeby wyświetlić całość)")
-        st.dataframe(data=top_10_codes[["Kody", "Wartości", "Opisy"]])
+        st.dataframe(data=df[["Kody", "Wartości", "Opisy"]])
 
         codes_ranking_path = os.path.join(folder_path, "Ranking kodów.xlsx")
         df.to_excel(codes_ranking_path, index=False)
