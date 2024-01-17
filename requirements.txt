@@ -1,0 +1,1 @@
+pandas matplotlib streamlit numpy scikit-learn mplcursors plotly openpyxl bs4
