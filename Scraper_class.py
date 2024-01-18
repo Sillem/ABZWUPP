@@ -6,6 +6,7 @@ import openpyxl
 from time import sleep
 import json
 
+
 def remove_char(input_string, char_to_remove):
     result = ""
     for char in input_string:
@@ -20,6 +21,7 @@ class Scraper(object):
 
 
     """
+
     def __init__(self):
         """Konstruktor klasy inicjalizujacy puste listy 'subject_names', 'subject_ids',
         'field_list_codes_and_des', 'field_codes', 'field_codes_dict' ktore beda
@@ -34,7 +36,7 @@ class Scraper(object):
     def reset_codes_data(self):
         """
         Ta funkcja jest funkcja pomocnicza, sluzaca do resetowania pol 'field_list_codes_and_des',
-        'field_codes', 'field_codes_dict'. 
+        'field_codes', 'field_codes_dict'.
         """
         self.field_list_codes_and_des = []
         self.field_codes = []
@@ -42,7 +44,7 @@ class Scraper(object):
 
     def create_folder(self, folder_name, path=None):
         """
-        Ta funkcja sluzy do tworzenaia folderu, w ktorym beda zapisywane pobrane teksty. 
+        Ta funkcja sluzy do tworzenaia folderu, w ktorym beda zapisywane pobrane teksty.
 
         Args:
             folder_name (str): string z nazwa folderu
@@ -96,7 +98,7 @@ class Scraper(object):
 
     def get_effects_content_codes(self, chosen_id, subject_name):
         """
-        Ta funkcja pobiera efekty kształcenia i treści programowe dla wybranego przedmiotu. 
+        Ta funkcja pobiera efekty kształcenia i treści programowe dla wybranego przedmiotu.
 
         Args:
             chosen_id (int): int z kolejnym nr przedmiotu na danym kierunku
@@ -168,14 +170,22 @@ class Scraper(object):
         return codes_and_descriptions, learning_effects, course_content
 
     def save_json(self, selected_field, codes, effects, contents):
-        
+        """
+        Ta funkcja zapisuje kody i objaśnienia kodów, efekty uczenia się oraz treści programowe do pliku json.
+
+        Args:
+            selected_field (str): nazwa kierunku
+            codes (dict): słownik kodów do zapisu
+            effects (dict): słownik efektów uczenia się do zapisu
+            contents (dict): słownik treści programowych do zapisu
+        """
         default_path = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), os.pardir)
-            )
+            os.path.join(os.path.dirname(__file__), os.pardir)
+        )
         field_names_folder = "Selected_fields_of_study"
         folder_path = os.path.join(
-                default_path, field_names_folder, f"{selected_field}"
-            )
+            default_path, field_names_folder, f"{selected_field}"
+        )
 
         # Plik_01.json - zapisywanie kodów wybranego kierunku wraz z objaśnieniami
         field_codes = list(filter(None, list(set(self.field_codes))))
@@ -185,17 +195,17 @@ class Scraper(object):
             for kod, opis in kody.items():
                 if kod in field_codes:
                     dict[kod] = opis
-        
-        with open(os.path.join(folder_path, "opis_kodow.json"), "w", encoding="utf-8") as json_file:
+
+        with open(
+            os.path.join(folder_path, "opis_kodow.json"), "w", encoding="utf-8"
+        ) as json_file:
             json.dump(dict, json_file)
 
-
-        # Plik_02.json - zapisywanie efektów uczenia się 
+        # Plik_02.json - zapisywanie efektów uczenia się
         with open(
             os.path.join(folder_path, "efekty_uczenia.json"), "w", encoding="utf-8"
         ) as json_file:
             json.dump(effects, json_file, ensure_ascii=False)
-
 
         # Plik_03.json zapisywanie treści programowych
         with open(
@@ -204,13 +214,12 @@ class Scraper(object):
             encoding="utf-8",
         ) as json_file:
             json.dump(contents, json_file, ensure_ascii=False)
-        
-        # Plik_04.json - zapisywanie przedmiotów wybranego kierunku oraz przyporządkowanych do nich kodów  
+
+        # Plik_04.json - zapisywanie przedmiotów wybranego kierunku oraz przyporządkowanych do nich kodów
         with open(
             os.path.join(folder_path, "kody2.json"), "w", encoding="utf-8"
         ) as json_file:
             json.dump(codes, json_file, ensure_ascii=False)
-
 
     def save_data(self, selected_field):
         """
@@ -246,7 +255,7 @@ class Scraper(object):
         default_path = os.path.abspath(os.path.join(current_path, os.pardir))
         field_names_folder = "Selected_fields_of_study"
         folder_path = os.path.join(default_path, field_names_folder)
-        print("co to ścieżka: " +str(type(folder_path)))
+        print("co to ścieżka: " + str(type(folder_path)))
         self.create_folder(f"{selected_field}", folder_path)
         file_path = os.path.join(folder_path, selected_field, f"{selected_field}.xlsx")
         wb.save(file_path)
@@ -254,15 +263,15 @@ class Scraper(object):
     def get_data(self, sub_sub_url, progress_bar):
         """
         Ta funkcja tworzy slowniki z kodami, efektami nauczania i tresciami programowymi dla wybranego przez
-        uzytkownika kierunku nauczania. 
+        uzytkownika kierunku nauczania.
 
         Args:
             sub_sub_url (str): string z linkiem do podstrony wybranego kierunku nauczania
-            progress_bar (class 'streamlit.delta_generator.DeltaGenerator): klasa z modulu streamlit do 
+            progress_bar (class 'streamlit.delta_generator.DeltaGenerator): klasa z modulu streamlit do
             tworzenia paska postepu
 
         Returns:
-            tuple effects, contents, codes: krotka ze slownikami efektow, tresci i kodow dla wybranego 
+            tuple effects, contents, codes: krotka ze slownikami efektow, tresci i kodow dla wybranego
             kierunku
         """
         self.reset_codes_data()
@@ -317,7 +326,7 @@ class Scraper(object):
 
     def get_description(self, selected_field, sub_sub_url):
         """
-        Ta funkcja uzyskuje opis kierunku nauczania wybranego przez uzytkownika. 
+        Ta funkcja uzyskuje opis kierunku nauczania wybranego przez uzytkownika.
 
         Args:
             selected_field (str): string z nazwa wybranego kierunku studiow
