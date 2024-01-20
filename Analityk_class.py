@@ -56,6 +56,7 @@ class Analityk(object):
         folder_path = os.path.join(
             default_path, "Selected_fields_of_study", f"{file_name}"
         )
+        plot_path = os.path.join(folder_path, "Wykresy")
         file_path_excel = os.path.join(folder_path, f"{file_name}.xlsx")
         df = pd.read_excel(file_path_excel).set_index("Przedmioty")
 
@@ -107,6 +108,9 @@ class Analityk(object):
 
         st.plotly_chart(fig)
 
+        with open(os.path.join(plot_path, "wykres słupkowy.svg"), "wb") as plot_file:
+            fig.write_image(plot_file, format="svg")
+
     # def draw_plot_01(self, file_name):
     #     """
     #     Ta funkcja rysuje wykres słupkowy z udziałem procentowym 10 najczęściej występujących
@@ -155,6 +159,7 @@ class Analityk(object):
         folder_path = os.path.join(
             default_path, "Selected_fields_of_study", f"{file_name}"
         )
+        plot_path = os.path.join(folder_path, "Wykresy")
         file_path_excel = os.path.join(folder_path, f"{file_name}.xlsx")
         df = pd.read_excel(file_path_excel).set_index("Przedmioty")
 
@@ -187,15 +192,7 @@ class Analityk(object):
         # Przekształcenie danych na procenty
         df["Procentowe Wartości"] = df["Wartości"] / df["Wartości"].sum()
         df["Procentowe Wartości"] = df["Procentowe Wartości"].map("{:.2%}".format)
-
         print(df)
-        # # Top 10 najczęściej występujących
-        # top_10_codes = df[:10]
-
-        # Skrócenie opisów do jednego zdania
-        # Wybór pierwszego zdania jako skrócony opis
-        # df["Opis_skrocony"] = df["Opisy"].apply(lambda x: x.split(".")[0])
-        # print(df)
 
         fig = px.pie(
             df,
@@ -216,6 +213,12 @@ class Analityk(object):
             textinfo="percent+label",
             marker=dict(colors=px.colors.qualitative.T10),
         )
+
+        with open(os.path.join(plot_path, "wykres kołowy.svg"), "wb") as plot_file:
+            fig.write_image(plot_file, format="svg")
+
+
+
         st.plotly_chart(fig)
         st.markdown("(kliknij dwukrotnie na opis, żeby wyświetlić całość)")
         st.dataframe(data=df[["Kody", "Wartości", "Opisy"]])
@@ -275,6 +278,7 @@ class Analityk(object):
         folder_path = os.path.join(
             default_path, "Selected_fields_of_study", f"{file_name}"
         )
+        plot_path = os.path.join(folder_path, "Wykresy")
         file_path = os.path.join(folder_path, f"{file_name}.xlsx")
         df = pd.read_excel(file_path).set_index("Przedmioty")
 
@@ -332,7 +336,11 @@ class Analityk(object):
             bbox_to_anchor=(1.05, 1.0),
             loc="upper left",
         )
-        plt.savefig("wykres.svg", format="svg", bbox_inches="tight", pad_inches=0.1)
+
+        with open(
+            os.path.join(plot_path, "wykres_klasyfikacja.svg"), "w", encoding="utf-8"
+        ) as plot_file:
+            plt.savefig(plot_file, format="svg", bbox_inches="tight", pad_inches=0.1)
 
     # def dendrogram_func(self, file_name, title="ward"):
     #     """
@@ -383,6 +391,7 @@ class Analityk(object):
         folder_path = os.path.join(
             default_path, "Selected_fields_of_study", f"{file_name}"
         )
+        plot_path = os.path.join(folder_path, "Wykresy")
         file_path = os.path.join(folder_path, f"{file_name}.xlsx")
         df = pd.read_excel(file_path).set_index("Przedmioty")
 
@@ -406,5 +415,10 @@ class Analityk(object):
             height=600,
         )
 
+        with open(os.path.join(plot_path, "dendogram.svg"), "wb") as plot_file:
+            dendrogram.write_image(plot_file, format="svg")
+
         # Show the interactive dendrogram
         st.plotly_chart(dendrogram)
+
+        

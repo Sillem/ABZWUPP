@@ -257,6 +257,8 @@ class Scraper(object):
         folder_path = os.path.join(default_path, field_names_folder)
         print("co to ścieżka: " + str(type(folder_path)))
         self.create_folder(f"{selected_field}", folder_path)
+        plot_path = os.path.join(folder_path, f"{selected_field}")
+        self.create_folder("Wykresy", plot_path)
         file_path = os.path.join(folder_path, selected_field, f"{selected_field}.xlsx")
         wb.save(file_path)
 
