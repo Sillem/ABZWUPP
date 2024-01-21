@@ -86,12 +86,6 @@ class Analityk(object):
         # Dodanie wartości z tablicy values do ramki danych
         df["Wartości"] = suma_codes
 
-        # Skrócenie opisów do jednego zdania
-        # df["Opis_skrocony"] = df["Opisy"].apply(
-        #     lambda x: "xdddddd" + x  # split_string_at_nearest_space(x)
-        # )
-        # Wybór pierwszego zdania jako skrócony opis
-
         fig = px.bar(
             df,
             x=variable_names,
@@ -111,45 +105,11 @@ class Analityk(object):
         with open(os.path.join(plot_path, "wykres słupkowy.svg"), "wb") as plot_file:
             fig.write_image(plot_file, format="svg")
 
-    # def draw_plot_01(self, file_name):
-    #     """
-    #     Ta funkcja rysuje wykres słupkowy z udziałem procentowym 10 najczęściej występujących
-    #     kodów na danym kierunku nauczania.
-
-    #     Args:
-    #         file_name (str): string z nazwą wybranego kierunku studiów
-    #     """
-    #     current_path = os.path.dirname(__file__)
-    #     default_path = os.path.abspath(os.path.join(current_path, os.pardir))
-    #     folder_path = os.path.join(default_path, "Selected_fields_of_study", f"{file_name}")
-
-    #     file_path = os.path.join(folder_path, f"{file_name}.xlsx")
-    #     df = pd.read_excel(file_path).set_index("Przedmioty")
-
-    #     plt.figure(figsize=(12, 6))
-
-    #     suma_codes = [df[col].sum() for col in df.columns]
-    #     słownik = {col: suma for col, suma in zip(df.columns, suma_codes)}
-    #     sorted_słownik = dict(sorted(słownik.items(), key=lambda item: item[1], reverse=True)[:10])  # Sortowanie i wybór 10 największych wartości
-
-    #     variable_names = list(sorted_słownik.keys()) # Zmienne z największymi sumami
-    #     suma_codes = list(sorted_słownik.values()) # Sumy odpowiadające tym zmiennym
-
-    #     bar_plot = plt.bar(variable_names, suma_codes, color = "orange")
-
-    #     plt.xticks(rotation = 45, ha = 'right')
-    #     plt.xlabel('Kody')
-    #     plt.ylabel('Liczebność')
-
-    #     for bar, name in zip(bar_plot, variable_names):
-    #         plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), name, ha = 'center', va = 'bottom', fontsize = 8)
-
-    #     plt.grid(True)
-    #     st.pyplot(plt)
-
     def draw_plot_02(self, file_name):
         """Ta funkcja rysuje wykres kołowy z procentowym udziałem 10 najczęściej występujących kodów na
-        danym kierunku nauczania.
+        danym kierunku nauczania oraz rysuje taki sam wykres w bibliotece matplotlib do zapisania w pliku
+         .svg. Funkcja tworzy plik .xlsx z rankingiem kodów występujących na danym kierunku 
+        nauczania. 
 
         Args:
             file_name (str): string z nazwą wybranego kierunku studiów
@@ -217,7 +177,7 @@ class Analityk(object):
         st.markdown("(kliknij dwukrotnie na opis, żeby wyświetlić całość)")
         st.dataframe(data=df[["Kody", "Wartości", "Opisy"]])
 
-        codes_ranking_path = os.path.join(folder_path, "Ranking kodów.xlsx")
+        codes_ranking_path = os.path.join(plot_path, "Ranking kodów.xlsx")
         df.to_excel(codes_ranking_path, index=False)
 
         plt.figure(figsize=(8, 8))
@@ -256,24 +216,6 @@ class Analityk(object):
             os.path.join(plot_path, "wykres_kołowy.svg"), "w", encoding="utf-8"
         ) as plot_file:
             plt.savefig(plot_file, format="svg", bbox_inches="tight", pad_inches=0.1)
-    # def draw_plot_02(self, file_name):
-    #     """
-    #     
-
-    #     plt.figure(figsize=(8, 8))
-
-    #     suma_codes = [df[col].sum() for col in df.columns]
-    #     słownik = {col: suma for col, suma in zip(df.columns, suma_codes)}
-    #     sorted_słownik = dict(sorted(słownik.items(), key=lambda item: item[1], reverse=True)[:10])  # Sortowanie i wybór 10 największych wartości
-
-    #     variable_names = list(sorted_słownik.keys())  # Zmienne z największymi sumami
-    #     suma_codes = list(sorted_słownik.values())   # Sumy odpowiadające tym zmiennym
-
-    #     palette = plt.cm.get_cmap('tab20b', len(variable_names))
-    #     colors = palette(np.linspace(0, 1, len(variable_names)))
-
-    #     plt.pie(suma_codes, labels=variable_names, colors=colors, autopct='%1.1f%%', startangle=140)
-    #     plt.axis('equal')
 
 
     def plot_results(
@@ -285,7 +227,7 @@ class Analityk(object):
         """
             Ta funkcja rysuje wykres punktowy z przypisaniem poszczegolnych przedmiotow z danego kierunku
             do podobnych klastrow za pomocą biblioteki plotly oraz rysuje taki sam wykres z wykorzystaniem
-            biblioteki matplotlib do zapisania w pliku .xslx.
+            biblioteki matplotlib do zapisania w pliku .svg.
         Args:
             model (sklearn.cluster): wybrany model z pakietu sklearn, domyslnie kmeans z podzialem na 3 klastry
             title (str):  string z nazwa wykresu
@@ -362,7 +304,8 @@ class Analityk(object):
 
     def dendrogram_func(self, file_name, title="ward"):
         """
-        Ta funkcja rysuje dendrogram ukazujący związki między przedmiotami na wybranym kierunku nauczania.
+        Ta funkcja rysuje dendrogram ukazujący związki między przedmiotami na wybranym kierunku nauczania 
+        oraz rysuje taki sam wykres z wykorzystaniem biblioteki matplotlib do zapisania w pliku .svg.
 
         Args:
             title (str): string z nazwą wybranej metody tworzenia dendrogramu, domyślnie ward
@@ -411,9 +354,7 @@ class Analityk(object):
         plt.title(f"Dendrogram - {title}")
         plt.xlabel("Objects")
         plt.ylabel("Distance")
-
-        # with open(os.path.join(plot_path, "dendogram.svg"), "wb") as plot_file:
-        #     wykres.write_(plot_file, format="svg")
+        
         with open(
             os.path.join(plot_path, "dendrogram.svg"), "w", encoding="utf-8"
         ) as plot_file:

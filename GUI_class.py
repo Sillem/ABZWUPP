@@ -231,7 +231,7 @@ class GUI(object):
     def create_formularz(self):
         """
         Ta funkcja odpowaida za caly interfejs aplikacji webowej tworzonej za pomoca modulu streamlit -
-        wyswietlanie pol wyboru, wykresow i innych komunkatow.
+        wyswietlanie pol wyboru, wykresow i innych komunikatow.
 
         """
         url = "https://sylabus.sggw.edu.pl/pl/1/19/3/4/40"
