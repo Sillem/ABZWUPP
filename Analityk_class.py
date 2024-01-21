@@ -111,6 +111,42 @@ class Analityk(object):
         with open(os.path.join(plot_path, "wykres słupkowy.svg"), "wb") as plot_file:
             fig.write_image(plot_file, format="svg")
 
+    # def draw_plot_01(self, file_name):
+    #     """
+    #     Ta funkcja rysuje wykres słupkowy z udziałem procentowym 10 najczęściej występujących
+    #     kodów na danym kierunku nauczania.
+
+    #     Args:
+    #         file_name (str): string z nazwą wybranego kierunku studiów
+    #     """
+    #     current_path = os.path.dirname(__file__)
+    #     default_path = os.path.abspath(os.path.join(current_path, os.pardir))
+    #     folder_path = os.path.join(default_path, "Selected_fields_of_study", f"{file_name}")
+
+    #     file_path = os.path.join(folder_path, f"{file_name}.xlsx")
+    #     df = pd.read_excel(file_path).set_index("Przedmioty")
+
+    #     plt.figure(figsize=(12, 6))
+
+    #     suma_codes = [df[col].sum() for col in df.columns]
+    #     słownik = {col: suma for col, suma in zip(df.columns, suma_codes)}
+    #     sorted_słownik = dict(sorted(słownik.items(), key=lambda item: item[1], reverse=True)[:10])  # Sortowanie i wybór 10 największych wartości
+
+    #     variable_names = list(sorted_słownik.keys()) # Zmienne z największymi sumami
+    #     suma_codes = list(sorted_słownik.values()) # Sumy odpowiadające tym zmiennym
+
+    #     bar_plot = plt.bar(variable_names, suma_codes, color = "orange")
+
+    #     plt.xticks(rotation = 45, ha = 'right')
+    #     plt.xlabel('Kody')
+    #     plt.ylabel('Liczebność')
+
+    #     for bar, name in zip(bar_plot, variable_names):
+    #         plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), name, ha = 'center', va = 'bottom', fontsize = 8)
+
+    #     plt.grid(True)
+    #     st.pyplot(plt)
+
     def draw_plot_02(self, file_name):
         """Ta funkcja rysuje wykres kołowy z procentowym udziałem 10 najczęściej występujących kodów na
         danym kierunku nauczania.
@@ -155,8 +191,7 @@ class Analityk(object):
 
         # Przekształcenie danych na procenty
         df["Procentowe Wartości"] = df["Wartości"] / df["Wartości"].sum()
-        df["Procentowe Wartości"] = df["Procentowe Wartości"].map("{:.2%}".format)
-        print(df)
+        df["Procentowe Wartości"] = df["Procentowe Wartości"].map("{:.2%}".format)  
 
         fig = px.pie(
             df,
@@ -177,18 +212,69 @@ class Analityk(object):
             textinfo="percent+label",
             marker=dict(colors=px.colors.qualitative.T10),
         )
-
-        with open(os.path.join(plot_path, "wykres kołowy.svg"), "wb") as plot_file:
-            fig.write_image(plot_file, format="svg")
-
-
-
         st.plotly_chart(fig)
+        #tworzenie tabeli z opisem kodów
         st.markdown("(kliknij dwukrotnie na opis, żeby wyświetlić całość)")
         st.dataframe(data=df[["Kody", "Wartości", "Opisy"]])
 
         codes_ranking_path = os.path.join(folder_path, "Ranking kodów.xlsx")
         df.to_excel(codes_ranking_path, index=False)
+
+        plt.figure(figsize=(8, 8))
+
+        df = pd.read_excel(file_path_excel).set_index("Przedmioty")
+        suma_codes = [df[col].sum() for col in df.columns]
+        słownik = {col: suma for col, suma in zip(df.columns, suma_codes)}
+        sorted_słownik = dict(sorted(słownik.items(), key=lambda item: item[1], reverse=True))  # Sortowanie i wybór 10 największych wartości
+
+        variable_names = list(sorted_słownik.keys())  # Zmienne z największymi sumami
+        suma_codes = list(sorted_słownik.values())   # Sumy odpowiadające tym zmiennym
+        for i in range(len(suma_codes)):
+            if (suma_codes[i]/sum(suma_codes)) <=0.03:
+                variable_names[i] = "inne"
+        suma = 0
+        for i in range(len(suma_codes)):
+            if(variable_names[i]=="inne"):
+                suma+=suma_codes[i]
+        nazwy = []
+        wartosci = []
+        for i in range(len(suma_codes)):
+            if(variable_names[i]!="inne"):
+                nazwy.append(variable_names[i])
+                wartosci.append(suma_codes[i])
+        wartosci.append(suma)
+        nazwy.append("inne")
+        
+        
+        palette = plt.cm.get_cmap('tab20b', len(nazwy))
+        colors = palette(np.linspace(0, 1, len(nazwy)))
+
+        plt.pie(wartosci, labels=nazwy, colors=colors, autopct='%1.1f%%', startangle=140)
+        plt.axis('equal')
+
+        with open(
+            os.path.join(plot_path, "wykres_kołowy.svg"), "w", encoding="utf-8"
+        ) as plot_file:
+            plt.savefig(plot_file, format="svg", bbox_inches="tight", pad_inches=0.1)
+    # def draw_plot_02(self, file_name):
+    #     """
+    #     
+
+    #     plt.figure(figsize=(8, 8))
+
+    #     suma_codes = [df[col].sum() for col in df.columns]
+    #     słownik = {col: suma for col, suma in zip(df.columns, suma_codes)}
+    #     sorted_słownik = dict(sorted(słownik.items(), key=lambda item: item[1], reverse=True)[:10])  # Sortowanie i wybór 10 największych wartości
+
+    #     variable_names = list(sorted_słownik.keys())  # Zmienne z największymi sumami
+    #     suma_codes = list(sorted_słownik.values())   # Sumy odpowiadające tym zmiennym
+
+    #     palette = plt.cm.get_cmap('tab20b', len(variable_names))
+    #     colors = palette(np.linspace(0, 1, len(variable_names)))
+
+    #     plt.pie(suma_codes, labels=variable_names, colors=colors, autopct='%1.1f%%', startangle=140)
+    #     plt.axis('equal')
+
 
     def plot_results(
         self,
