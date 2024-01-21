@@ -111,42 +111,6 @@ class Analityk(object):
         with open(os.path.join(plot_path, "wykres słupkowy.svg"), "wb") as plot_file:
             fig.write_image(plot_file, format="svg")
 
-    # def draw_plot_01(self, file_name):
-    #     """
-    #     Ta funkcja rysuje wykres słupkowy z udziałem procentowym 10 najczęściej występujących
-    #     kodów na danym kierunku nauczania.
-
-    #     Args:
-    #         file_name (str): string z nazwą wybranego kierunku studiów
-    #     """
-    #     current_path = os.path.dirname(__file__)
-    #     default_path = os.path.abspath(os.path.join(current_path, os.pardir))
-    #     folder_path = os.path.join(default_path, "Selected_fields_of_study", f"{file_name}")
-
-    #     file_path = os.path.join(folder_path, f"{file_name}.xlsx")
-    #     df = pd.read_excel(file_path).set_index("Przedmioty")
-
-    #     plt.figure(figsize=(12, 6))
-
-    #     suma_codes = [df[col].sum() for col in df.columns]
-    #     słownik = {col: suma for col, suma in zip(df.columns, suma_codes)}
-    #     sorted_słownik = dict(sorted(słownik.items(), key=lambda item: item[1], reverse=True)[:10])  # Sortowanie i wybór 10 największych wartości
-
-    #     variable_names = list(sorted_słownik.keys()) # Zmienne z największymi sumami
-    #     suma_codes = list(sorted_słownik.values()) # Sumy odpowiadające tym zmiennym
-
-    #     bar_plot = plt.bar(variable_names, suma_codes, color = "orange")
-
-    #     plt.xticks(rotation = 45, ha = 'right')
-    #     plt.xlabel('Kody')
-    #     plt.ylabel('Liczebność')
-
-    #     for bar, name in zip(bar_plot, variable_names):
-    #         plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), name, ha = 'center', va = 'bottom', fontsize = 8)
-
-    #     plt.grid(True)
-    #     st.pyplot(plt)
-
     def draw_plot_02(self, file_name):
         """Ta funkcja rysuje wykres kołowy z procentowym udziałem 10 najczęściej występujących kodów na
         danym kierunku nauczania.
@@ -225,38 +189,6 @@ class Analityk(object):
 
         codes_ranking_path = os.path.join(folder_path, "Ranking kodów.xlsx")
         df.to_excel(codes_ranking_path, index=False)
-
-    # def draw_plot_02(self, file_name):
-    #     """
-    #     Ta funkcja rysuje wykres kołowy z udziałem procentowym 10 najczęściej występujących
-    #     kodów na danym kierunku nauczania.
-
-    #     Args:
-    #         file_name (str): string z nazwą wybranego kierunku studiów
-    #     """
-    #     current_path = os.path.dirname(__file__)
-    #     default_path = os.path.abspath(os.path.join(current_path, os.pardir))
-    #     folder_path = os.path.join(default_path, "Selected_fields_of_study", f"{file_name}")
-
-    #     file_path = os.path.join(folder_path, f"{file_name}.xlsx")
-    #     df = pd.read_excel(file_path).set_index("Przedmioty")
-
-    #     plt.figure(figsize=(8, 8))
-
-    #     suma_codes = [df[col].sum() for col in df.columns]
-    #     słownik = {col: suma for col, suma in zip(df.columns, suma_codes)}
-    #     sorted_słownik = dict(sorted(słownik.items(), key=lambda item: item[1], reverse=True)[:10])  # Sortowanie i wybór 10 największych wartości
-
-    #     variable_names = list(sorted_słownik.keys())  # Zmienne z największymi sumami
-    #     suma_codes = list(sorted_słownik.values())   # Sumy odpowiadające tym zmiennym
-
-    #     palette = plt.cm.get_cmap('tab20b', len(variable_names))
-    #     colors = palette(np.linspace(0, 1, len(variable_names)))
-
-    #     plt.pie(suma_codes, labels=variable_names, colors=colors, autopct='%1.1f%%', startangle=140)
-    #     plt.axis('equal')
-
-    #     st.pyplot(plt)
 
     def plot_results(
         self,
@@ -342,42 +274,6 @@ class Analityk(object):
         ) as plot_file:
             plt.savefig(plot_file, format="svg", bbox_inches="tight", pad_inches=0.1)
 
-    # def dendrogram_func(self, file_name, title="ward"):
-    #     """
-    #     Ta funkcja rysuje dendrogram ukazujący związki między przedmiotami na wybranym kierunku nauczania.
-
-    #     Args:
-    #         title (str): string z nazwą wybranej metody tworzenia dendrogramu, domyślnie ward
-    #         file_name (str): string z nazwą wybranego kierunku studiów
-    #     """
-    #     current_path = os.path.dirname(__file__)
-    #     default_path = os.path.abspath(os.path.join(current_path, os.pardir))
-    #     folder_path = os.path.join(
-    #         default_path, "Selected_fields_of_study", f"{file_name}"
-    #     )
-    #     file_path = os.path.join(folder_path, f"{file_name}.xlsx")
-    #     df = pd.read_excel(file_path).set_index("Przedmioty")
-
-    #     scaler = StandardScaler()
-    #     scaled_df = scaler.fit_transform(df)
-    #     scaled_df = pd.DataFrame(scaled_df, index=df.index, columns=df.columns)
-    #     final_df = scaled_df.copy()
-
-    #     linked = linkage(final_df, f"{title}")
-    #     plt.figure(figsize=(12, 8))
-    #     dendrogram(
-    #         linked,
-    #         labels=df.index,
-    #         orientation="right",
-    #         distance_sort="descending",
-    #         show_leaf_counts=True,
-    #     )
-
-    #     plt.title(f"Dendrogram - {title}")
-    #     plt.xlabel("Objects")
-    #     plt.ylabel("Distance")
-    #     st.pyplot(plt)
-
     def dendrogram_func(self, file_name, title="ward"):
         """
         Ta funkcja rysuje dendrogram ukazujący związki między przedmiotami na wybranym kierunku nauczania.
@@ -403,22 +299,39 @@ class Analityk(object):
         linked = linkage(final_df, f"{title}")
 
         # Create dendrogram with right orientation using plotly.figure_factory
-        dendrogram = ff.create_dendrogram(
+        dendrogram_plt = ff.create_dendrogram(
             final_df.T, labels=df.index, orientation="left", linkagefun=lambda x: linked
         )
 
-        dendrogram.update_layout(
+        dendrogram_plt.update_layout(
             xaxis=dict(title="Distance"),
             yaxis=dict(title="Objects"),
             title=f"Dendrogram - {title}",
             width=800,
-            height=600,
+            height=1200,
+        )
+        # Show the interactive dendrogram
+        st.plotly_chart(dendrogram_plt)
+
+        plt.figure(figsize=(12, 8))
+        dendrogram(
+            linked,
+            labels=df.index,
+            orientation="right",
+            distance_sort="descending",
+            show_leaf_counts=True,
         )
 
-        with open(os.path.join(plot_path, "dendogram.svg"), "wb") as plot_file:
-            dendrogram.write_image(plot_file, format="svg")
+        plt.title(f"Dendrogram - {title}")
+        plt.xlabel("Objects")
+        plt.ylabel("Distance")
 
-        # Show the interactive dendrogram
-        st.plotly_chart(dendrogram)
+        # with open(os.path.join(plot_path, "dendogram.svg"), "wb") as plot_file:
+        #     wykres.write_(plot_file, format="svg")
+        with open(
+            os.path.join(plot_path, "dendrogram.svg"), "w", encoding="utf-8"
+        ) as plot_file:
+            plt.savefig(plot_file, format="svg", bbox_inches="tight", pad_inches=0.1)
+        
 
         
