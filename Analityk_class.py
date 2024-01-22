@@ -193,7 +193,7 @@ class Analityk(object):
         variable_names = list(sorted_słownik.keys())  # Zmienne z największymi sumami
         suma_codes = list(sorted_słownik.values())  # Sumy odpowiadające tym zmiennym
         for i in range(len(suma_codes)):
-            if (suma_codes[i] / sum(suma_codes)) <= 0.03:
+            if (suma_codes[i] / sum(suma_codes)) <= 0.019:
                 variable_names[i] = "inne"
         suma = 0
         for i in range(len(suma_codes)):
