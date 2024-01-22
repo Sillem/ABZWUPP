@@ -403,6 +403,9 @@ class Analityk(object):
         ### jeśli długość treści programowych jest większa niż 90 tysięcy znaków, użyj tylko pierwszych 90 tysięcy
         if len(combined_string) > 90000:
             combined_string = combined_string[:90000]
+            print(
+                "Contents are larger than 90k characters. Using only first 90k characters."
+            )
 
         try:
             wyniki = requests.post(
