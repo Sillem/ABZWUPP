@@ -372,6 +372,12 @@ class Analityk(object):
             course_name (str): string z nazwą wybranego kierunku studiów
             contents (dict): słownik zawierający treści programowe kierunku studiów
         """
+        current_path = os.path.dirname(__file__)
+        default_path = os.path.abspath(os.path.join(current_path, os.pardir))
+        folder_path = os.path.join(
+            default_path, "Selected_fields_of_study", f"{course_name}"
+        )
+        plot_path = os.path.join(folder_path, "Wykresy")
         categories_names = {
             "ekonomia-i-finanse": "Ekonomia i finanse",
             "informatyka-techniczna-i-komunikacyjna": "Informatyka techniczna i komunikacyjna",
@@ -401,8 +407,8 @@ class Analityk(object):
         # print("Ilość wyrazów: ", len(combined_string.split()))
 
         ### jeśli długość treści programowych jest większa niż 90 tysięcy znaków, użyj tylko pierwszych 90 tysięcy
-        if len(combined_string) > 90000:
-            combined_string = combined_string[:90000]
+        if len(combined_string) > 150000:
+            combined_string = combined_string[:150000]
 
         try:
             wyniki = requests.post(
@@ -440,7 +446,10 @@ class Analityk(object):
                 textinfo="percent+label",
                 marker=dict(colors=px.colors.qualitative.T10),
             )
+            fig.update_layout(width=800)
             st.plotly_chart(fig)
+            with open(os.path.join(plot_path, "przypisanie_dyscyplin.svg"), "wb") as plot_file:
+                fig.write_image(plot_file, format="svg")
         except requests.exceptions.RequestException as e:
             # All exceptions that Requests explicitly raises inherit from requests.exceptions.RequestException.
             st.write("Kategoryzacja treści kierunku niedostępna.")
