@@ -7,6 +7,7 @@ import os
 import json
 import sklearn.cluster as cl
 from time import time
+import pandas as pd
 
 
 class GUI(object):
@@ -281,6 +282,7 @@ class GUI(object):
 
         ### Tworzenie przycisku zatwierdzającego wybory ###
         if st.button("Zatwierdź wybory"):
+            st.title(selected_field)
             start = time()
             progress_bar = st.progress(0)
             status_text = st.empty()
@@ -326,6 +328,10 @@ class GUI(object):
             self.analityk.dendrogram_func(selected_field)  # dendrogram metodą Warda
             print(f"Wyświetlanie danych zajęło {(time() - start):.{2}f} sekund")
             progress_bar.progress(100)
+
+            self.analityk.categorize_learning_contents_and_draw_plot(
+                selected_field, contents
+            )
 
 
 def main():

@@ -13,6 +13,7 @@ import plotly.express as px
 from plotly.figure_factory import create_dendrogram
 import json
 import plotly.figure_factory as ff
+import requests
 
 from openpyxl import Workbook
 from openpyxl.drawing.image import Image
@@ -95,7 +96,7 @@ class Analityk(object):
         fig.update_traces(textposition="outside")
         fig.update_layout(
             xaxis=dict(tickangle=-45),
-            title="Dziesięć najczęściej występujących kodów",
+            title="Dziesięć najczęściej występujących kodów efektów uczenia się",
             xaxis_title="Kody",
             yaxis_title="Liczebność",
         )
@@ -108,8 +109,8 @@ class Analityk(object):
     def draw_plot_02(self, file_name):
         """Ta funkcja rysuje wykres kołowy z procentowym udziałem 10 najczęściej występujących kodów na
         danym kierunku nauczania oraz rysuje taki sam wykres w bibliotece matplotlib do zapisania w pliku
-         .svg. Funkcja tworzy plik .xlsx z rankingiem kodów występujących na danym kierunku 
-        nauczania. 
+         .svg. Funkcja tworzy plik .xlsx z rankingiem kodów występujących na danym kierunku
+        nauczania.
 
         Args:
             file_name (str): string z nazwą wybranego kierunku studiów
@@ -151,13 +152,13 @@ class Analityk(object):
 
         # Przekształcenie danych na procenty
         df["Procentowe Wartości"] = df["Wartości"] / df["Wartości"].sum()
-        df["Procentowe Wartości"] = df["Procentowe Wartości"].map("{:.2%}".format)  
+        df["Procentowe Wartości"] = df["Procentowe Wartości"].map("{:.2%}".format)
 
         fig = px.pie(
             df,
             values="Wartości",
             names="Kody",
-            title="Procentowy udział występujących kodów na wybranym kierunku",
+            title="Procentowy udział występujących kodów efektów uczenia się na wybranym kierunku",
             hover_data=[
                 "Procentowe Wartości"
             ],  # Dodaj dane do wyświetlania podczas najechania myszą
@@ -173,7 +174,7 @@ class Analityk(object):
             marker=dict(colors=px.colors.qualitative.T10),
         )
         st.plotly_chart(fig)
-        #tworzenie tabeli z opisem kodów
+        # tworzenie tabeli z opisem kodów
         st.markdown("(kliknij dwukrotnie na opis, żeby wyświetlić całość)")
         st.dataframe(data=df[["Kody", "Wartości", "Opisy"]])
 
@@ -185,38 +186,40 @@ class Analityk(object):
         df = pd.read_excel(file_path_excel).set_index("Przedmioty")
         suma_codes = [df[col].sum() for col in df.columns]
         słownik = {col: suma for col, suma in zip(df.columns, suma_codes)}
-        sorted_słownik = dict(sorted(słownik.items(), key=lambda item: item[1], reverse=True))  # Sortowanie i wybór 10 największych wartości
+        sorted_słownik = dict(
+            sorted(słownik.items(), key=lambda item: item[1], reverse=True)
+        )  # Sortowanie i wybór 10 największych wartości
 
         variable_names = list(sorted_słownik.keys())  # Zmienne z największymi sumami
-        suma_codes = list(sorted_słownik.values())   # Sumy odpowiadające tym zmiennym
+        suma_codes = list(sorted_słownik.values())  # Sumy odpowiadające tym zmiennym
         for i in range(len(suma_codes)):
-            if (suma_codes[i]/sum(suma_codes)) <=0.03:
+            if (suma_codes[i] / sum(suma_codes)) <= 0.03:
                 variable_names[i] = "inne"
         suma = 0
         for i in range(len(suma_codes)):
-            if(variable_names[i]=="inne"):
-                suma+=suma_codes[i]
+            if variable_names[i] == "inne":
+                suma += suma_codes[i]
         nazwy = []
         wartosci = []
         for i in range(len(suma_codes)):
-            if(variable_names[i]!="inne"):
+            if variable_names[i] != "inne":
                 nazwy.append(variable_names[i])
                 wartosci.append(suma_codes[i])
         wartosci.append(suma)
         nazwy.append("inne")
-        
-        
-        palette = plt.cm.get_cmap('tab20b', len(nazwy))
+
+        palette = plt.cm.get_cmap("tab20b", len(nazwy))
         colors = palette(np.linspace(0, 1, len(nazwy)))
 
-        plt.pie(wartosci, labels=nazwy, colors=colors, autopct='%1.1f%%', startangle=140)
-        plt.axis('equal')
+        plt.pie(
+            wartosci, labels=nazwy, colors=colors, autopct="%1.1f%%", startangle=140
+        )
+        plt.axis("equal")
 
         with open(
             os.path.join(plot_path, "wykres_kołowy.svg"), "w", encoding="utf-8"
         ) as plot_file:
             plt.savefig(plot_file, format="svg", bbox_inches="tight", pad_inches=0.1)
-
 
     def plot_results(
         self,
@@ -304,7 +307,7 @@ class Analityk(object):
 
     def dendrogram_func(self, file_name, title="ward"):
         """
-        Ta funkcja rysuje dendrogram ukazujący związki między przedmiotami na wybranym kierunku nauczania 
+        Ta funkcja rysuje dendrogram ukazujący związki między przedmiotami na wybranym kierunku nauczania
         oraz rysuje taki sam wykres z wykorzystaniem biblioteki matplotlib do zapisania w pliku .svg.
 
         Args:
@@ -354,11 +357,90 @@ class Analityk(object):
         plt.title(f"Dendrogram - {title}")
         plt.xlabel("Objects")
         plt.ylabel("Distance")
-        
+
         with open(
             os.path.join(plot_path, "dendrogram.svg"), "w", encoding="utf-8"
         ) as plot_file:
             plt.savefig(plot_file, format="svg", bbox_inches="tight", pad_inches=0.1)
-        
 
-        
+    def categorize_learning_contents_and_draw_plot(self, course_name, contents):
+        """Ta funkcja rysuje wykres kołowy pokazujący stopień przyporządkowania treści programowych studiów do kategorii nauk według naszego autorskiego modelu.
+
+        Funkcja łączy treści programowe w jeden długi string, a następnie wykonuje zapytanie do backendu, na którym uruchomiony jest program zwracający wyniki. Wynikami są stopnie przyporządkowania treści do poszczególnych kategorii.
+
+        Args:
+            course_name (str): string z nazwą wybranego kierunku studiów
+            contents (dict): słownik zawierający treści programowe kierunku studiów
+        """
+        categories_names = {
+            "ekonomia-i-finanse": "Ekonomia i finanse",
+            "informatyka-techniczna-i-komunikacyjna": "Informatyka techniczna i komunikacyjna",
+            "inzynieria-ladowa-geodezja-i-transport": "Inżynieria lądowa, geodezja i transport",
+            "inzynieria-mechaniczna": "Inżynieria mechaniczna",
+            "inzynieria-srodowiska-gornictwo-i-energetyka": "Inżynieria środowiska, górnictwo i energetyka",
+            "nauki-biologiczne": "Nauki biologiczne",
+            "nauki-leśne": "Nauki leśne",
+            "nauki-o-zarzadzaniu-i-jakosci": "Nauki o zarządzaniu i jakości",
+            "nauki-socjologiczne": "Nauki socjologiczne",
+            "pedagogika": "Pedagogika",
+            "rolnictwo-i-ogrodnictwo": "Rolnictwo i ogrodnictwo",
+            "techologia-zywnosci-i-zywienia": "Technologia żywności i żywienia",
+            "weterynaria": "Weterynaria",
+        }
+
+        combined_string = ""
+        for key in contents.keys():
+            combined_string = (
+                combined_string
+                + key.replace("\xa0", " ").replace("\u2013", " ")
+                + " "
+                + contents[key].replace("\xa0", " ")
+            )
+
+        # print("Ilość znaków: ", len(combined_string))
+        # print("Ilość wyrazów: ", len(combined_string.split()))
+
+        ### jeśli długość treści programowych jest większa niż 90 tysięcy znaków, użyj tylko pierwszych 90 tysięcy
+        if len(combined_string) > 90000:
+            combined_string = combined_string[:90000]
+
+        try:
+            wyniki = requests.post(
+                "https://abzwupp-classifier.lm.r.appspot.com/predict-proba",
+                json={"text": combined_string},
+            ).json()
+
+            # print(wyniki)
+
+            df = pd.DataFrame(
+                wyniki.values(),
+                index=wyniki.keys(),
+                columns=["Stopień przyporządkowania"],
+            )
+            df["Kategoria nauk"] = categories_names.values()
+            df.sort_values(
+                by="Stopień przyporządkowania", inplace=True, ascending=False
+            )
+
+            fig = px.pie(
+                df,
+                values="Stopień przyporządkowania",
+                names="Kategoria nauk",
+                title="Stopień przyporządkowania treści programowych kierunku do poszczególnych nauk",
+                hover_data=[
+                    "Kategoria nauk"
+                ],  # Dodaj dane do wyświetlania podczas najechania myszą
+                labels={
+                    "Kategoria nauk": "Kategoria nauk",
+                    "Stopień przyporządkowania": "Stopień przyporządkowania",
+                },
+            )
+            fig.update_traces(
+                textposition="inside",
+                textinfo="percent+label",
+                marker=dict(colors=px.colors.qualitative.T10),
+            )
+            st.plotly_chart(fig)
+        except requests.exceptions.RequestException as e:
+            # All exceptions that Requests explicitly raises inherit from requests.exceptions.RequestException.
+            st.write("Kategoryzacja treści kierunku niedostępna.")
