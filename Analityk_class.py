@@ -403,12 +403,15 @@ class Analityk(object):
                 + contents[key].replace("\xa0", " ")
             )
 
-        # print("Ilość znaków: ", len(combined_string))
+        print("Ilość znaków treści programowych: ", len(combined_string))
         # print("Ilość wyrazów: ", len(combined_string.split()))
 
-        ### jeśli długość treści programowych jest większa niż 90 tysięcy znaków, użyj tylko pierwszych 90 tysięcy
+        ### jeśli długość treści programowych jest większa niż 150 tysięcy znaków, użyj tylko pierwszych 150 tysięcy
         if len(combined_string) > 150000:
             combined_string = combined_string[:150000]
+            print(
+                "Contents are larger than 150k characters. Using only first 150 characters."
+            )
 
         try:
             wyniki = requests.post(
