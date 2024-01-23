@@ -229,6 +229,23 @@ class GUI(object):
 
         return selected_language, languages, forms, url
 
+    def get_selected_level_abbreviation(self, level):
+        """
+        Ta funkcja zwraca skrót dla wybranego stopnia studiów.
+        """
+        if level == "studia pierwszego stopnia (inżynier)":
+            return "(1-st inż)"
+        elif level == "studia pierwszego stopnia (licencjat)":
+            return "(1-st lic)"
+        elif level == "studia drugiego stopnia (magister)":
+            return "(2-st mag)"
+        elif level == "studia drugiego stopnia (magister inżynier)":
+            return "(2-st mag-inż)"
+        elif level == "jednolite studia magisterskie":
+            return "(jednolite mag)"
+        else:
+            return ""
+
     def create_formularz(self):
         """
         Ta funkcja odpowaida za caly interfejs aplikacji webowej tworzonej za pomoca modulu streamlit -
@@ -265,6 +282,8 @@ class GUI(object):
         selected_level, url = self.get_level(
             selected_language, languages, selected_form, forms, levels
         )
+
+        print()
         ### Wybór wydziału ###
         selected_faculty, faculties, links = self.get_faculties(url)
         for i in range(len(faculties)):
@@ -274,6 +293,10 @@ class GUI(object):
         ### Wybór kierunku studiów ###
         sub_url = links[chosen_one]
         selected_field, fields, sublinks = self.get_field(sub_url)
+
+        selected_field_folder_name = (
+            selected_field + " " + self.get_selected_level_abbreviation(selected_level)
+        )
 
         for i in range(len(fields)):
             if selected_field == fields[i]:
@@ -292,7 +315,7 @@ class GUI(object):
             # Pobieranie słowników z efektami kształcenia, treściami programowymi i kodów z wybranego kierunku
 
             start = time()
-            self.scraper.save_data(selected_field)
+            self.scraper.save_data(selected_field, selected_field_folder_name)
             # Tworzenie excela z przedmiotami wybranego kierunku z przyporządkowanymi liczbami poszczególnych kodów
             print(f"Tworzenie excela zajęło {(time() - start):.{2}f} sekund")
             default_path = os.path.abspath(
@@ -305,7 +328,9 @@ class GUI(object):
             progress_bar.progress(80)
             ### Zapisywanie plików json ###
             start = time()
-            self.scraper.save_json(selected_field, codes, effects, contents)
+            self.scraper.save_json(
+                selected_field, selected_field_folder_name, codes, effects, contents
+            )
             print(
                 f"Zapisywanie treści programowych zajęło {(time() - start):.{2}f} sekund."
             )
@@ -316,21 +341,26 @@ class GUI(object):
             self.scraper.get_description(selected_field, sub_sub_url)
             st.markdown("# Wyniki analizy")
             st.markdown("### Wykres słupkowy")
-            self.analityk.draw_plot_01(selected_field)
+            self.analityk.draw_plot_01(selected_field, selected_field_folder_name)
             st.markdown("### Wykres kołowy ")
-            self.analityk.draw_plot_02(selected_field)
+            self.analityk.draw_plot_02(selected_field, selected_field_folder_name)
             st.markdown("### Klasteryzacja")
             self.analityk.plot_results(
-                selected_field, cl.KMeans(n_clusters=3), "KMeans"
+                selected_field,
+                selected_field_folder_name,
+                cl.KMeans(n_clusters=3),
+                "KMeans",
             )  # próba narysowania wykresu z podziałem na klastry
             print("model " + str(type(cl.KMeans(n_clusters=3))))
             st.markdown("### Dendrogram")
-            self.analityk.dendrogram_func(selected_field)  # dendrogram metodą Warda
+            self.analityk.dendrogram_func(
+                selected_field, selected_field_folder_name
+            )  # dendrogram metodą Warda
             print(f"Wyświetlanie danych zajęło {(time() - start):.{2}f} sekund")
             progress_bar.progress(100)
 
             self.analityk.categorize_learning_contents_and_draw_plot(
-                selected_field, contents
+                selected_field, selected_field_folder_name, contents
             )
 
 

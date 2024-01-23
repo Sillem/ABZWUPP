@@ -44,19 +44,21 @@ class Analityk(object):
     klasy Scraper.
     """
 
-    def draw_plot_01(self, file_name):
+    def draw_plot_01(self, file_name, selected_field_folder_name):
         """
         Ta funkcja rysuje wykres słupkowy z udziałem procentowym 10 najczęściej występujących
         kodów na danym kierunku nauczania.
 
         Args:
             file_name (str): string z nazwą wybranego kierunku studiów
+            selected_field_folder_name (str): string z nazwą folderu z danymi dla wybranego kierunku studiów
         """
         current_path = os.path.dirname(__file__)
         default_path = os.path.abspath(os.path.join(current_path, os.pardir))
         folder_path = os.path.join(
-            default_path, "Selected_fields_of_study", f"{file_name}"
+            default_path, "Selected_fields_of_study", f"{selected_field_folder_name}"
         )
+        print("folder_path: ", folder_path)
         plot_path = os.path.join(folder_path, "Wykresy")
         file_path_excel = os.path.join(folder_path, f"{file_name}.xlsx")
         df = pd.read_excel(file_path_excel).set_index("Przedmioty")
@@ -106,7 +108,7 @@ class Analityk(object):
         with open(os.path.join(plot_path, "wykres słupkowy.svg"), "wb") as plot_file:
             fig.write_image(plot_file, format="svg")
 
-    def draw_plot_02(self, file_name):
+    def draw_plot_02(self, file_name, selected_field_folder_name):
         """Ta funkcja rysuje wykres kołowy z procentowym udziałem 10 najczęściej występujących kodów na
         danym kierunku nauczania oraz rysuje taki sam wykres w bibliotece matplotlib do zapisania w pliku
          .svg. Funkcja tworzy plik .xlsx z rankingiem kodów występujących na danym kierunku
@@ -114,11 +116,12 @@ class Analityk(object):
 
         Args:
             file_name (str): string z nazwą wybranego kierunku studiów
+            selected_field_folder_name (str): string z nazwą folderu z danymi dla wybranego kierunku studiów
         """
         current_path = os.path.dirname(__file__)
         default_path = os.path.abspath(os.path.join(current_path, os.pardir))
         folder_path = os.path.join(
-            default_path, "Selected_fields_of_study", f"{file_name}"
+            default_path, "Selected_fields_of_study", f"{selected_field_folder_name}"
         )
         plot_path = os.path.join(folder_path, "Wykresy")
         file_path_excel = os.path.join(folder_path, f"{file_name}.xlsx")
@@ -224,6 +227,7 @@ class Analityk(object):
     def plot_results(
         self,
         file_name,
+        selected_field_folder_name,
         model=cl.KMeans(n_clusters=3),
         title="KMeans",
     ):
@@ -235,11 +239,12 @@ class Analityk(object):
             model (sklearn.cluster): wybrany model z pakietu sklearn, domyslnie kmeans z podzialem na 3 klastry
             title (str):  string z nazwa wykresu
             file_name (str): string z nazwa wybranego kierunku studiow
+            selected_field_folder_name (str): string z nazwą folderu z danymi dla wybranego kierunku studiów
         """
         current_path = os.path.dirname(__file__)
         default_path = os.path.abspath(os.path.join(current_path, os.pardir))
         folder_path = os.path.join(
-            default_path, "Selected_fields_of_study", f"{file_name}"
+            default_path, "Selected_fields_of_study", f"{selected_field_folder_name}"
         )
         plot_path = os.path.join(folder_path, "Wykresy")
         file_path = os.path.join(folder_path, f"{file_name}.xlsx")
@@ -305,7 +310,7 @@ class Analityk(object):
         ) as plot_file:
             plt.savefig(plot_file, format="svg", bbox_inches="tight", pad_inches=0.1)
 
-    def dendrogram_func(self, file_name, title="ward"):
+    def dendrogram_func(self, file_name, selected_field_folder_name, title="ward"):
         """
         Ta funkcja rysuje dendrogram ukazujący związki między przedmiotami na wybranym kierunku nauczania
         oraz rysuje taki sam wykres z wykorzystaniem biblioteki matplotlib do zapisania w pliku .svg.
@@ -317,7 +322,7 @@ class Analityk(object):
         current_path = os.path.dirname(__file__)
         default_path = os.path.abspath(os.path.join(current_path, os.pardir))
         folder_path = os.path.join(
-            default_path, "Selected_fields_of_study", f"{file_name}"
+            default_path, "Selected_fields_of_study", f"{selected_field_folder_name}"
         )
         plot_path = os.path.join(folder_path, "Wykresy")
         file_path = os.path.join(folder_path, f"{file_name}.xlsx")
@@ -363,19 +368,22 @@ class Analityk(object):
         ) as plot_file:
             plt.savefig(plot_file, format="svg", bbox_inches="tight", pad_inches=0.1)
 
-    def categorize_learning_contents_and_draw_plot(self, course_name, contents):
+    def categorize_learning_contents_and_draw_plot(
+        self, course_name, selected_field_folder_name, contents
+    ):
         """Ta funkcja rysuje wykres kołowy pokazujący stopień przyporządkowania treści programowych studiów do kategorii nauk według naszego autorskiego modelu.
 
         Funkcja łączy treści programowe w jeden długi string, a następnie wykonuje zapytanie do backendu, na którym uruchomiony jest program zwracający wyniki. Wynikami są stopnie przyporządkowania treści do poszczególnych kategorii.
 
         Args:
             course_name (str): string z nazwą wybranego kierunku studiów
+            selected_field_folder_name (str): string z nazwą folderu z danymi dla wybranego kierunku studiów
             contents (dict): słownik zawierający treści programowe kierunku studiów
         """
         current_path = os.path.dirname(__file__)
         default_path = os.path.abspath(os.path.join(current_path, os.pardir))
         folder_path = os.path.join(
-            default_path, "Selected_fields_of_study", f"{course_name}"
+            default_path, "Selected_fields_of_study", f"{selected_field_folder_name}"
         )
         plot_path = os.path.join(folder_path, "Wykresy")
         categories_names = {
@@ -451,7 +459,9 @@ class Analityk(object):
             )
             fig.update_layout(width=800)
             st.plotly_chart(fig)
-            with open(os.path.join(plot_path, "przypisanie_dyscyplin.svg"), "wb") as plot_file:
+            with open(
+                os.path.join(plot_path, "przypisanie_dyscyplin.svg"), "wb"
+            ) as plot_file:
                 fig.write_image(plot_file, format="svg")
         except requests.exceptions.RequestException as e:
             # All exceptions that Requests explicitly raises inherit from requests.exceptions.RequestException.

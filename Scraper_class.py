@@ -169,12 +169,15 @@ class Scraper(object):
 
         return codes_and_descriptions, learning_effects, course_content
 
-    def save_json(self, selected_field, codes, effects, contents):
+    def save_json(
+        self, selected_field, selected_field_folder_name, codes, effects, contents
+    ):
         """
         Ta funkcja zapisuje kody i objaśnienia kodów, efekty uczenia się oraz treści programowe do pliku json.
 
         Args:
             selected_field (str): nazwa kierunku
+            selected_field_folder_name (str): nazwa folderu z wybranym kierunkiem
             codes (dict): słownik kodów do zapisu
             effects (dict): słownik efektów uczenia się do zapisu
             contents (dict): słownik treści programowych do zapisu
@@ -184,7 +187,7 @@ class Scraper(object):
         )
         field_names_folder = "Selected_fields_of_study"
         folder_path = os.path.join(
-            default_path, field_names_folder, f"{selected_field}"
+            default_path, field_names_folder, f"{selected_field_folder_name}"
         )
 
         # Plik_01.json - zapisywanie kodów wybranego kierunku wraz z objaśnieniami
@@ -221,12 +224,13 @@ class Scraper(object):
         ) as json_file:
             json.dump(codes, json_file, ensure_ascii=False)
 
-    def save_data(self, selected_field):
+    def save_data(self, selected_field, selected_field_folder_name):
         """
         Ta funkcja zapisuje pobrane dane na temat wybranego kierunku do pliku .xlsx.
 
         Args:
             selected_field (str): string z nazwa wybranego kierunku
+            selected_field_folder_name (str): nazwa folderu z wybranym kierunkiem
         """
         field_codes_dict = self.field_codes_dict
         field_codes = list(filter(None, list(set(self.field_codes))))
@@ -256,10 +260,12 @@ class Scraper(object):
         field_names_folder = "Selected_fields_of_study"
         folder_path = os.path.join(default_path, field_names_folder)
         print("co to ścieżka: " + str(type(folder_path)))
-        self.create_folder(f"{selected_field}", folder_path)
-        plot_path = os.path.join(folder_path, f"{selected_field}")
+        self.create_folder(f"{selected_field_folder_name}", folder_path)
+        plot_path = os.path.join(folder_path, f"{selected_field_folder_name}")
         self.create_folder("Wykresy", plot_path)
-        file_path = os.path.join(folder_path, selected_field, f"{selected_field}.xlsx")
+        file_path = os.path.join(
+            folder_path, selected_field_folder_name, f"{selected_field}.xlsx"
+        )
         wb.save(file_path)
 
     def get_data(self, sub_sub_url, progress_bar):
