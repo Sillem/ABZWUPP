@@ -359,4 +359,4 @@ class Scraper(object):
         for paragraph in paragraphs:
             paragraph_text = paragraph.get_text(strip=True).replace(">", "")
             if paragraph_text != "" and paragraph_text != "Program studiów":
-                st.write(paragraph_text)
+                st.write(paragraph_text, style={"text-align": "justify"})
